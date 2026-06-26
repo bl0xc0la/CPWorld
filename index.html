@@ -3,32 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Multiplayer Penguin Chat</title>
+    <title>Multiplayer Penguin Chat - 2.5D Mode</title>
     
-    <!-- Import "Luckiest Guy" Font to mimic the classic game -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&display=swap" rel="stylesheet">
-
     <style>
         body {
             margin: 0;
             overflow: hidden;
-            /* 1. Awesome Icy Gradient Background */
-            background: linear-gradient(to bottom, #1E90FF 0%, #87CEFA 50%, #E0F7FA 100%);
-            font-family: 'Luckiest Guy', cursive;
+            font-family: Arial, Helvetica, sans-serif;
+            background-color: #E0F7FA;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 600"><rect width="1000" height="600" fill="%23E0F7FA"/><ellipse cx="500" cy="350" rx="350" ry="120" fill="%23B2EBF2" stroke="%2380DEEA" stroke-width="6"/><path d="M-100,-100 Q200,200 500,-100 Z" fill="white"/><path d="M1100,-100 Q800,250 400,-100 Z" fill="white"/><g transform="translate(800, 150)"><circle cx="0" cy="0" r="100" fill="%23FFFFFF"/><path d="M-100,0 A100,100 0 0,1 100,0 Z" fill="%23E0F7FA"/><rect x="-30" y="-10" width="60" height="40" rx="20" fill="%2337474F"/></g><g transform="translate(150, 100) scale(0.7)"><circle cx="0" cy="0" r="100" fill="%23FFFFFF"/><path d="M-100,0 A100,100 0 0,1 100,0 Z" fill="%23E0F7FA"/><rect x="-30" y="-10" width="60" height="40" rx="20" fill="%2337474F"/></g></svg>');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
         }
+
         #canvas-container {
             width: 100vw;
             height: 100vh;
             display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
         }
+        
+        #bubbles-container {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 5;
+        }
+
         #ui-container {
             position: absolute;
             bottom: 20px;
             left: 50%;
             transform: translateX(-50%);
-            /* 2. UI Container Gradient */
             background: linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, rgba(220, 240, 255, 0.95) 100%);
             padding: 15px;
             border-radius: 15px;
@@ -41,22 +52,19 @@
             z-index: 20;
         }
 
-        /* 3. The Double UI Stroke Trick */
         .double-stroke-text {
-            color: #FFFFFF; /* Text Color */
+            color: #FFFFFF;
             font-size: 32px;
+            font-weight: 900;
             letter-spacing: 2px;
             margin: 0;
             text-align: center;
-            /* Inner stroke (black) and Outer stroke (dark blue) */
+            text-transform: uppercase;
             text-shadow: 
-                /* Inner Black Stroke */
                 -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000,
                 -2px 0 0 #000, 2px 0 0 #000, 0 -2px 0 #000, 0 2px 0 #000,
-                /* Outer Blue Stroke */
                 -4px -4px 0 #0056b3, 4px -4px 0 #0056b3, -4px 4px 0 #0056b3, 4px 4px 0 #0056b3,
                 -4px 0 0 #0056b3, 4px 0 0 #0056b3, 0 -4px 0 #0056b3, 0 4px 0 #0056b3,
-                /* Drop shadow for 3D effect */
                 0px 6px 0px rgba(0,0,0,0.3);
         }
 
@@ -66,22 +74,24 @@
             border: 3px solid #003366;
             padding: 8px;
             background: #fff;
-            font-family: Arial, sans-serif; /* Keep chat readable */
             font-size: 15px;
+            font-weight: bold;
             border-radius: 8px;
             box-shadow: inset 0 3px 6px rgba(0,0,0,0.1);
         }
+        
         .chat-input-row {
             display: flex;
             gap: 8px;
         }
+        
         input {
             padding: 10px;
             border: 3px solid #003366;
             border-radius: 8px;
-            font-family: 'Luckiest Guy', cursive;
+            font-family: Arial, sans-serif;
+            font-weight: bold;
             font-size: 16px;
-            letter-spacing: 1px;
             outline: none;
         }
         input:focus { border-color: #00BFFF; }
@@ -91,16 +101,16 @@
         
         button {
             padding: 10px 20px;
-            /* Button Gradient */
             background: linear-gradient(180deg, #00BFFF 0%, #0056b3 100%);
             color: white;
             border: 3px solid #003366;
             border-radius: 8px;
             cursor: pointer;
-            font-family: 'Luckiest Guy', cursive;
+            font-family: Arial, sans-serif;
+            font-weight: 900;
             font-size: 18px;
             letter-spacing: 1px;
-            -webkit-text-stroke: 1px black; /* Single stroke on button */
+            -webkit-text-stroke: 1px black;
             box-shadow: 0 4px 0 #003366;
             transition: transform 0.1s, box-shadow 0.1s;
         }
@@ -109,7 +119,6 @@
             box-shadow: 0 0 0 #003366;
         }
         
-        /* Updated Speech Bubble */
         .speech-bubble {
             position: absolute;
             background: linear-gradient(180deg, #ffffff 0%, #f0f0f0 100%);
@@ -151,9 +160,9 @@
             z-index: 1;
         }
     </style>
-    <!-- Three.js and Socket.io -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="/socket.io/socket.io.js"></script>
+    <!-- Fix: Import socket.io-client via CDN since it is not served from the root as a local file -->
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 </head>
 <body>
 
@@ -161,8 +170,7 @@
     <div id="bubbles-container"></div>
 
     <div id="ui-container">
-        <!-- New Double Stroke Title -->
-        <h3 class="double-stroke-text">Global Chat</h3>
+        <h3 class="double-stroke-text">Ice Pond Chat</h3>
         <div id="chat-log"></div>
         <div class="chat-input-row">
             <input type="text" id="username-input" placeholder="Name" value="Penguin" maxlength="10">
@@ -180,79 +188,94 @@
         const bubblesContainer = document.getElementById('bubbles-container');
         
         const scene = new THREE.Scene();
-        // Removed the solid background color so the CSS gradient shows through!
 
-        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
-        camera.position.set(0, 15, 25);
+        const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(0, 20, 30);
         camera.lookAt(0, 0, 0);
 
-        // Alpha: true makes the Three.js canvas transparent
         const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setClearColor(0x000000, 0); // Completely clear
+        renderer.setClearColor(0x000000, 0); 
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         container.appendChild(renderer.domElement);
 
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
         scene.add(ambientLight);
-        const dirLight = new THREE.DirectionalLight(0xffffff, 0.5);
-        dirLight.position.set(5, 15, 5);
+        
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.6);
+        dirLight.position.set(10, 20, 10);
+        dirLight.castShadow = true;
+        dirLight.shadow.camera.left = -25;
+        dirLight.shadow.camera.right = 25;
+        dirLight.shadow.camera.top = 25;
+        dirLight.shadow.camera.bottom = -25;
+        dirLight.shadow.mapSize.width = 1024;
+        dirLight.shadow.mapSize.height = 1024;
         scene.add(dirLight);
 
-        // Make the ground slightly transparent so it looks like ice over the gradient
-        const groundGeo = new THREE.PlaneGeometry(100, 100);
-        const groundMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.9 }); 
+        const groundGeo = new THREE.PlaneGeometry(150, 150);
+        const groundMat = new THREE.ShadowMaterial({ opacity: 0.3 }); 
         const ground = new THREE.Mesh(groundGeo, groundMat);
         ground.rotation.x = -Math.PI / 2;
+        ground.receiveShadow = true; 
         scene.add(ground);
 
-        // Creates a penguin mesh
         function createPenguin() {
             const penguinGroup = new THREE.Group();
             
-            const bodyMat = new THREE.MeshBasicMaterial({ color: 0x222222 });
-            const bellyMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
-            const beakMat = new THREE.MeshBasicMaterial({ color: 0xffaa00 });
+            const bodyMat = new THREE.MeshStandardMaterial({ color: 0x222222 });
+            const bellyMat = new THREE.MeshStandardMaterial({ color: 0xffffff });
+            const beakMat = new THREE.MeshStandardMaterial({ color: 0xffaa00 });
 
             const bodyGeo = new THREE.CylinderGeometry(0.8, 1, 1.8, 16);
             const body = new THREE.Mesh(bodyGeo, bodyMat);
             body.position.y = 1.2;
+            body.castShadow = true;
             penguinGroup.add(body);
 
             const bellyGeo = new THREE.CylinderGeometry(0.6, 0.75, 1.4, 16);
             const belly = new THREE.Mesh(bellyGeo, bellyMat);
             belly.position.set(0, 1.2, 0.3);
             belly.scale.set(1, 1, 0.5); 
+            belly.castShadow = true;
             penguinGroup.add(belly);
 
             const headGeo = new THREE.SphereGeometry(0.8, 16, 16);
             const head = new THREE.Mesh(headGeo, bodyMat);
             head.position.y = 2.4;
+            head.castShadow = true;
             penguinGroup.add(head);
 
             const beakGeo = new THREE.ConeGeometry(0.25, 0.6, 16);
             const beak = new THREE.Mesh(beakGeo, beakMat);
             beak.rotation.x = Math.PI / 2;
             beak.position.set(0, 2.4, 0.8);
+            beak.castShadow = true;
             penguinGroup.add(beak);
 
             const flipperGeo = new THREE.BoxGeometry(0.2, 1, 0.4);
             const leftFlipper = new THREE.Mesh(flipperGeo, bodyMat);
             leftFlipper.position.set(-1.0, 1.4, 0);
             leftFlipper.rotation.z = Math.PI / 6;
+            leftFlipper.castShadow = true;
             penguinGroup.add(leftFlipper);
 
             const rightFlipper = new THREE.Mesh(flipperGeo, bodyMat);
             rightFlipper.position.set(1.0, 1.4, 0);
             rightFlipper.rotation.z = -Math.PI / 6;
+            rightFlipper.castShadow = true;
             penguinGroup.add(rightFlipper);
 
             const footGeo = new THREE.BoxGeometry(0.4, 0.15, 0.7);
             const leftFoot = new THREE.Mesh(footGeo, beakMat);
             leftFoot.position.set(-0.4, 0.1, 0.3);
+            leftFoot.castShadow = true;
             penguinGroup.add(leftFoot);
 
             const rightFoot = new THREE.Mesh(footGeo, beakMat);
             rightFoot.position.set(0.4, 0.1, 0.3);
+            rightFoot.castShadow = true;
             penguinGroup.add(rightFoot);
 
             scene.add(penguinGroup);
@@ -261,7 +284,6 @@
 
         const myPenguin = createPenguin();
 
-        // Socket logic
         socket.on('currentPlayers', (players) => {
             Object.keys(players).forEach((id) => {
                 if (id === socket.id) return; 
