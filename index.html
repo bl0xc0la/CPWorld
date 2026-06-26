@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Club Penguin World</title>
+    <title>Multiplayer Penguin Chat - Expanded Edition</title>
     
     <style>
         body {
@@ -11,10 +11,11 @@
             overflow: hidden;
             font-family: Arial, Helvetica, sans-serif;
             background-color: #E0F7FA;
-            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 600"><rect width="1000" height="600" fill="%23E0F7FA"/><ellipse cx="500" cy="350" rx="350" ry="120" fill="%23B2EBF2" stroke="%2380DEEA" stroke-width="6"/><path d="M-100,-100 Q200,200 500,-100 Z" fill="white"/><path d="M1100,-100 Q800,250 400,-100 Z" fill="white"/><g transform="translate(800, 150)"><circle cx="0" cy="0" r="100" fill="%23FFFFFF"/><path d="M-100,0 A100,100 0 0,1 100,0 Z" fill="%23E0F7FA"/><rect x="-30" y="-10" width="60" height="40" rx="20" fill="%2337474F"/></g><g transform="translate(150, 100) scale(0.7)"><circle cx="0" cy="0" r="100" fill="%23FFFFFF"/><path d="M-100,0 A100,100 0 0,1 100,0 Z" fill="%23E0F7FA"/><rect x="-30" y="-10" width="60" height="40" rx="20" fill="%2337474F"/></g></svg>');
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 600"><rect width="1000" height="600" fill="%23E0F7FA"/><ellipse cx="500" cy="350" rx="350" ry="120" fill="%23B2EBF2" stroke="%2380DEEA" stroke-width="6"/><path d="M-100,-100 Q200,200 500,-100 Z" fill="white"/><path d="M1100,-100 Q800,250 400,-100 Z" fill="white"/></svg>');
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
+            user-select: none;
         }
 
         #canvas-container {
@@ -22,12 +23,11 @@
             height: 100vh;
             display: block;
             position: absolute;
-            top: 0;
-            left: 0;
+            top: 0; left: 0;
             z-index: 1;
         }
         
-        #bubbles-container {
+        #overlays-container {
             position: absolute;
             top: 0; left: 0;
             width: 100%; height: 100%;
@@ -41,123 +41,178 @@
             left: 50%;
             transform: translateX(-50%);
             background: linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, rgba(220, 240, 255, 0.95) 100%);
-            padding: 15px;
+            padding: 12px;
             border-radius: 15px;
             box-shadow: 0 8px 15px rgba(0,0,0,0.3);
-            width: 450px;
+            width: 500px;
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 10px;
             border: 4px solid #003366;
             z-index: 20;
         }
 
         .double-stroke-text {
             color: #FFFFFF;
-            font-size: 32px;
+            font-size: 28px;
             font-weight: 900;
-            letter-spacing: 2px;
+            letter-spacing: 1px;
             margin: 0;
             text-align: center;
             text-transform: uppercase;
             text-shadow: 
                 -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000,
-                -2px 0 0 #000, 2px 0 0 #000, 0 -2px 0 #000, 0 2px 0 #000,
                 -4px -4px 0 #0056b3, 4px -4px 0 #0056b3, -4px 4px 0 #0056b3, 4px 4px 0 #0056b3,
-                -4px 0 0 #0056b3, 4px 0 0 #0056b3, 0 -4px 0 #0056b3, 0 4px 0 #0056b3,
-                0px 6px 0px rgba(0,0,0,0.3);
+                0px 4px 0px rgba(0,0,0,0.2);
         }
 
         #chat-log {
-            height: 120px;
+            height: 100px;
             overflow-y: auto;
             border: 3px solid #003366;
             padding: 8px;
             background: #fff;
-            font-size: 15px;
+            font-size: 14px;
             font-weight: bold;
             border-radius: 8px;
-            box-shadow: inset 0 3px 6px rgba(0,0,0,0.1);
         }
         
         .chat-input-row {
             display: flex;
-            gap: 8px;
+            gap: 6px;
         }
         
         input {
-            padding: 10px;
+            padding: 8px;
             border: 3px solid #003366;
             border-radius: 8px;
             font-family: Arial, sans-serif;
             font-weight: bold;
-            font-size: 16px;
+            font-size: 15px;
             outline: none;
         }
-        input:focus { border-color: #00BFFF; }
         
-        #username-input { width: 90px; }
+        #username-input { width: 80px; }
         #message-input { flex-grow: 1; }
         
         button {
-            padding: 10px 20px;
+            padding: 8px 14px;
             background: linear-gradient(180deg, #00BFFF 0%, #0056b3 100%);
             color: white;
             border: 3px solid #003366;
             border-radius: 8px;
             cursor: pointer;
-            font-family: Arial, sans-serif;
             font-weight: 900;
-            font-size: 18px;
-            letter-spacing: 1px;
-            -webkit-text-stroke: 1px black;
-            box-shadow: 0 4px 0 #003366;
-            transition: transform 0.1s, box-shadow 0.1s;
+            font-size: 15px;
+            -webkit-text-stroke: 0.5px black;
+            box-shadow: 0 3px 0 #003366;
         }
         button:active {
-            transform: translateY(4px);
+            transform: translateY(3px);
             box-shadow: 0 0 0 #003366;
+        }
+
+        #emote-btn { background: linear-gradient(180deg, #FFD54F 0%, #FF8F00 100%); }
+        #map-btn { background: linear-gradient(180deg, #a8ff78 0%, #78ffd6 100%); color: #003366; -webkit-text-stroke: 0px; }
+
+        #emote-drawer {
+            display: none;
+            position: absolute;
+            bottom: 185px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            border: 4px solid #003366;
+            border-radius: 12px;
+            padding: 8px;
+            gap: 8px;
+            z-index: 30;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+        }
+        .emote-option {
+            font-size: 24px;
+            cursor: pointer;
+            padding: 4px;
+            transition: transform 0.1s;
+        }
+        .emote-option:hover { transform: scale(1.3); }
+
+        #map-modal {
+            display: none;
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 400px;
+            background: #E0F7FA;
+            border: 5px solid #003366;
+            border-radius: 20px;
+            padding: 20px;
+            z-index: 100;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            text-align: center;
+        }
+        .map-regions {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+            gap: 15px;
+        }
+        .map-card {
+            background: white;
+            border: 3px solid #003366;
+            border-radius: 12px;
+            padding: 15px;
+            cursor: pointer;
+            flex: 1;
+            font-weight: bold;
+            box-shadow: 0 4px 0 #003366;
+        }
+        .map-card:hover { background: #B2EBF2; }
+
+        .player-name {
+            position: absolute;
+            transform: translate(-50%, -100%);
+            color: #001f3f;
+            background: rgba(255, 255, 255, 0.75);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            border: 1.5px solid #003366;
+            white-space: nowrap;
+            z-index: 6;
         }
         
         .speech-bubble {
             position: absolute;
-            background: linear-gradient(180deg, #ffffff 0%, #f0f0f0 100%);
-            border: 3px solid black;
-            border-radius: 15px;
-            padding: 10px 15px;
-            font-family: Arial, sans-serif;
+            background: white;
+            border: 2.5px solid black;
+            border-radius: 12px;
+            padding: 6px 12px;
             font-weight: bold;
-            font-size: 15px;
-            pointer-events: none;
-            transform: translate(-50%, -100%);
+            font-size: 14px;
+            transform: translate(-50%, -140%);
             white-space: nowrap;
-            box-shadow: 4px 4px 0px rgba(0,0,0,0.2);
             z-index: 10;
         }
         .speech-bubble::after {
-            content: '';
-            position: absolute;
-            bottom: -12px;
-            left: 50%;
-            transform: translateX(-50%);
-            border-width: 12px 12px 0;
-            border-style: solid;
-            border-color: black transparent transparent transparent;
-            display: block;
-            width: 0;
+            content: ''; position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%);
+            border-width: 10px 10px 0; border-style: solid; border-color: black transparent transparent;
         }
-        .speech-bubble::before {
-            content: '';
+
+        .floating-emote {
             position: absolute;
-            bottom: -8px;
-            left: 50%;
-            transform: translateX(-50%);
-            border-width: 9px 9px 0;
-            border-style: solid;
-            border-color: #f0f0f0 transparent transparent transparent;
-            display: block;
-            width: 0;
-            z-index: 1;
+            font-size: 36px;
+            transform: translate(-50%, -150%);
+            animation: bounceUp 1.5s ease-out forwards;
+            z-index: 12;
+        }
+        @keyframes bounceUp {
+            0% { transform: translate(-50%, -100%) scale(0.5); opacity: 0; }
+            15% { transform: translate(-50%, -160%) scale(1.2); opacity: 1; }
+            30% { transform: translate(-50%, -150%) scale(1.0); }
+            80% { opacity: 1; }
+            100% { transform: translate(-50%, -200%) scale(0.8); opacity: 0; }
         }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -166,151 +221,186 @@
 <body>
 
     <div id="canvas-container"></div>
-    <div id="bubbles-container"></div>
+    <div id="overlays-container"></div>
+
+    <div id="emote-drawer">
+        <span class="emote-option">🐧</span>
+        <span class="emote-option">❤️</span>
+        <span class="emote-option">😂</span>
+        <span class="emote-option">👍</span>
+        <span class="emote-option">❄️</span>
+        <span class="emote-option">❗</span>
+    </div>
+
+    <div id="map-modal">
+        <h3 class="double-stroke-text">Island Map</h3>
+        <div class="map-regions">
+            <div class="map-card" onclick="teleportToRegion(0, 0)">
+                <div style="font-size:32px">🏙️</div>
+                <div>Town Center</div>
+            </div>
+            <div class="map-card" onclick="teleportToRegion(45, -45)">
+                <div style="font-size:32px">🏡</div>
+                <div>Igloo Suburbs</div>
+            </div>
+        </div>
+        <button style="margin-top: 20px; background: #ff5252;" onclick="toggleMap(false)">Close</button>
+    </div>
 
     <div id="ui-container">
-        <h3 class="double-stroke-text">Chat</h3>
+        <h3 class="double-stroke-text">Plaza</h3>
         <div id="chat-log"></div>
         <div class="chat-input-row">
             <input type="text" id="username-input" placeholder="Name" value="Penguin" maxlength="10">
             <input type="text" id="message-input" placeholder="Type a message..." maxlength="50">
-            <button id="send-btn">SEND</button>
+            <button id="send-btn">Send</button>
+            <button id="emote-btn">Happy</button>
+            <button id="map-btn">Map</button>
         </div>
     </div>
 
     <script>
-        const socket = io();
+        // Connect directly to your external backend web server
+        const socket = io('https://cpworld.onrender.com/');
+        
         const otherPlayers = {}; 
-        const speechBubbles = {}; 
+        const overlays = {}; 
+        const activeEmotes = [];
 
         const container = document.getElementById('canvas-container');
-        const bubblesContainer = document.getElementById('bubbles-container');
+        const overlaysContainer = document.getElementById('overlays-container');
         
         const scene = new THREE.Scene();
-
         const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 1000);
-        camera.position.set(0, 20, 30);
+        camera.position.set(0, 22, 32);
         camera.lookAt(0, 0, 0);
 
         const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setClearColor(0x000000, 0); 
         renderer.shadowMap.enabled = true;
-        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         container.appendChild(renderer.domElement);
 
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
-        scene.add(ambientLight);
-        
-        const dirLight = new THREE.DirectionalLight(0xffffff, 0.6);
-        dirLight.position.set(10, 20, 10);
+        scene.add(new THREE.AmbientLight(0xffffff, 0.75));
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.5);
+        dirLight.position.set(20, 40, 20);
         dirLight.castShadow = true;
-        dirLight.shadow.camera.left = -25;
-        dirLight.shadow.camera.right = 25;
-        dirLight.shadow.camera.top = 25;
-        dirLight.shadow.camera.bottom = -25;
-        dirLight.shadow.mapSize.width = 1024;
-        dirLight.shadow.mapSize.height = 1024;
         scene.add(dirLight);
 
-        const groundGeo = new THREE.PlaneGeometry(150, 150);
-        const groundMat = new THREE.ShadowMaterial({ opacity: 0.3 }); 
+        const groundGeo = new THREE.PlaneGeometry(300, 300);
+        const groundMat = new THREE.ShadowMaterial({ opacity: 0.2 }); 
         const ground = new THREE.Mesh(groundGeo, groundMat);
         ground.rotation.x = -Math.PI / 2;
         ground.receiveShadow = true; 
         scene.add(ground);
 
-        function createPenguin() {
-            const penguinGroup = new THREE.Group();
+        function create3DIgloo(x, z) {
+            const group = new THREE.Group();
+            group.position.set(x, 0, z);
+            const iceMat = new THREE.MeshStandardMaterial({ color: 0xE0F7FA, roughness: 0.3, metalness: 0.1 });
             
+            const dome = new THREE.Mesh(new THREE.SphereGeometry(5, 16, 12, 0, Math.PI * 2, 0, Math.PI / 2), iceMat);
+            dome.castShadow = true; dome.receiveShadow = true;
+            group.add(dome);
+
+            const tunnel = new THREE.Mesh(new THREE.CylinderGeometry(1.8, 1.8, 4, 16, 1, false, 0, Math.PI), iceMat);
+            tunnel.rotation.x = Math.PI / 2; tunnel.rotation.z = Math.PI;
+            tunnel.position.set(0, 0, 4.5);
+            tunnel.castShadow = true; tunnel.receiveShadow = true;
+            group.add(tunnel);
+
+            scene.add(group);
+        }
+
+        create3DIgloo(35, -50);
+        create3DIgloo(55, -35);
+
+        function createPenguinMesh() {
+            const penguinGroup = new THREE.Group();
             const bodyMat = new THREE.MeshStandardMaterial({ color: 0x222222 });
             const bellyMat = new THREE.MeshStandardMaterial({ color: 0xffffff });
             const beakMat = new THREE.MeshStandardMaterial({ color: 0xffaa00 });
 
-            const bodyGeo = new THREE.CylinderGeometry(0.8, 1, 1.8, 16);
-            const body = new THREE.Mesh(bodyGeo, bodyMat);
-            body.position.y = 1.2;
-            body.castShadow = true;
-            penguinGroup.add(body);
+            const body = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 1, 1.8, 16), bodyMat);
+            body.position.y = 1.2; body.castShadow = true; penguinGroup.add(body);
 
-            const bellyGeo = new THREE.CylinderGeometry(0.6, 0.75, 1.4, 16);
-            const belly = new THREE.Mesh(bellyGeo, bellyMat);
-            belly.position.set(0, 1.2, 0.3);
-            belly.scale.set(1, 1, 0.5); 
-            belly.castShadow = true;
+            const belly = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.75, 1.4, 16), bellyMat);
+            belly.position.set(0, 1.2, 0.3); belly.scale.set(1, 1, 0.5); belly.castShadow = true;
             penguinGroup.add(belly);
 
-            const headGeo = new THREE.SphereGeometry(0.8, 16, 16);
-            const head = new THREE.Mesh(headGeo, bodyMat);
-            head.position.y = 2.4;
-            head.castShadow = true;
-            penguinGroup.add(head);
+            const head = new THREE.Mesh(new THREE.SphereGeometry(0.8, 16, 16), bodyMat);
+            head.position.y = 2.4; head.castShadow = true; penguinGroup.add(head);
 
-            const beakGeo = new THREE.ConeGeometry(0.25, 0.6, 16);
-            const beak = new THREE.Mesh(beakGeo, beakMat);
-            beak.rotation.x = Math.PI / 2;
-            beak.position.set(0, 2.4, 0.8);
-            beak.castShadow = true;
+            const beak = new THREE.Mesh(new THREE.ConeGeometry(0.25, 0.6, 16), beakMat);
+            beak.rotation.x = Math.PI / 2; beak.position.set(0, 2.4, 0.8); beak.castShadow = true;
             penguinGroup.add(beak);
 
-            const flipperGeo = new THREE.BoxGeometry(0.2, 1, 0.4);
-            const leftFlipper = new THREE.Mesh(flipperGeo, bodyMat);
-            leftFlipper.position.set(-1.0, 1.4, 0);
-            leftFlipper.rotation.z = Math.PI / 6;
-            leftFlipper.castShadow = true;
+            const leftFlipper = new THREE.Mesh(new THREE.BoxGeometry(0.2, 1, 0.4), bodyMat);
+            leftFlipper.position.set(-1.0, 1.4, 0); leftFlipper.rotation.z = Math.PI / 6; leftFlipper.castShadow = true;
             penguinGroup.add(leftFlipper);
 
-            const rightFlipper = new THREE.Mesh(flipperGeo, bodyMat);
-            rightFlipper.position.set(1.0, 1.4, 0);
-            rightFlipper.rotation.z = -Math.PI / 6;
-            rightFlipper.castShadow = true;
+            const rightFlipper = new THREE.Mesh(new THREE.BoxGeometry(0.2, 1, 0.4), bodyMat);
+            rightFlipper.position.set(1.0, 1.4, 0); rightFlipper.rotation.z = -Math.PI / 6; rightFlipper.castShadow = true;
             penguinGroup.add(rightFlipper);
 
-            const footGeo = new THREE.BoxGeometry(0.4, 0.15, 0.7);
-            const leftFoot = new THREE.Mesh(footGeo, beakMat);
-            leftFoot.position.set(-0.4, 0.1, 0.3);
-            leftFoot.castShadow = true;
-            penguinGroup.add(leftFoot);
-
-            const rightFoot = new THREE.Mesh(footGeo, beakMat);
-            rightFoot.position.set(0.4, 0.1, 0.3);
-            rightFoot.castShadow = true;
-            penguinGroup.add(rightFoot);
-
-            scene.add(penguinGroup);
             return penguinGroup;
         }
 
-        const myPenguin = createPenguin();
+        function setupDOMOverlay(id, initialName = "Penguin") {
+            const nameTag = document.createElement('div');
+            nameTag.className = 'player-name';
+            nameTag.innerText = initialName;
+            overlaysContainer.appendChild(nameTag);
+
+            overlays[id] = { nameElement: nameTag, bubbleElement: null, bubbleTimer: null };
+        }
+
+        const myPenguin = createPenguinMesh();
+        scene.add(myPenguin);
+        setupDOMOverlay(socket.id, "Penguin");
 
         socket.on('currentPlayers', (players) => {
             Object.keys(players).forEach((id) => {
-                if (id === socket.id) return; 
-                const p = createPenguin();
+                if (id === socket.id) {
+                    document.getElementById('username-input').value = players[id].username;
+                    overlays[socket.id].nameElement.innerText = players[id].username;
+                    return;
+                }
+                const p = createPenguinMesh();
                 p.position.set(players[id].x, 0, players[id].z);
+                scene.add(p);
                 otherPlayers[id] = p;
+                setupDOMOverlay(id, players[id].username);
             });
         });
 
         socket.on('newPlayer', (data) => {
-            const p = createPenguin();
+            const p = createPenguinMesh();
             p.position.set(data.playerInfo.x, 0, data.playerInfo.z);
+            scene.add(p);
             otherPlayers[data.id] = p;
+            setupDOMOverlay(data.id, data.playerInfo.username);
         });
 
         socket.on('playerMoved', (data) => {
             if (otherPlayers[data.id]) {
                 otherPlayers[data.id].position.set(data.x, 0, data.z);
                 otherPlayers[data.id].rotation.y = data.yRot;
-                const time = Date.now() * 0.015;
-                otherPlayers[data.id].rotation.z = Math.sin(time) * 0.15;
+                otherPlayers[data.id].rotation.z = Math.sin(Date.now() * 0.015) * 0.15;
+            }
+        });
+
+        socket.on('usernameUpdated', (data) => {
+            if (overlays[data.id]) {
+                overlays[data.id].nameElement.innerText = data.username;
             }
         });
 
         socket.on('playerDisconnected', (id) => {
-            if (otherPlayers[id]) {
-                scene.remove(otherPlayers[id]);
-                delete otherPlayers[id];
+            if (otherPlayers[id]) { scene.remove(otherPlayers[id]); delete otherPlayers[id]; }
+            if (overlays[id]) {
+                if (overlays[id].nameElement) overlays[id].nameElement.remove();
+                if (overlays[id].bubbleElement) overlays[id].bubbleElement.remove();
+                delete overlays[id];
             }
         });
 
@@ -320,7 +410,7 @@
         let isMoving = false;
 
         window.addEventListener('pointerdown', (event) => {
-            if (event.target.closest('#ui-container')) return;
+            if (event.target.closest('#ui-container') || event.target.closest('#emote-drawer') || event.target.closest('#map-modal')) return;
 
             mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
             mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
@@ -340,18 +430,20 @@
         const messageInput = document.getElementById('message-input');
         const sendBtn = document.getElementById('send-btn');
 
-        function sendServerMessage() {
+        function submitTextMessage() {
             const user = usernameInput.value.trim() || 'Penguin';
             const msg = messageInput.value.trim();
             if (!msg) return;
-
             socket.emit('chatMessage', { username: user, msg: msg });
             messageInput.value = '';
         }
 
-        sendBtn.addEventListener('click', sendServerMessage);
-        messageInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') sendServerMessage();
+        sendBtn.addEventListener('click', submitTextMessage);
+        messageInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') submitTextMessage(); });
+        
+        usernameInput.addEventListener('change', () => {
+            const updatedName = usernameInput.value.trim() || 'Penguin';
+            socket.emit('updateUsername', updatedName);
         });
 
         socket.on('newChatMessage', (data) => {
@@ -360,28 +452,86 @@
             msgDiv.innerHTML = `<strong>${data.username}:</strong> ${data.msg}`;
             chatLog.appendChild(msgDiv);
             chatLog.scrollTop = chatLog.scrollHeight; 
-
-            spawnSpeechBubble(data.id, data.msg);
+            triggerTextBubble(data.id, data.msg);
         });
 
-        function spawnSpeechBubble(id, text) {
-            if (speechBubbles[id]) {
-                speechBubbles[id].element.remove();
-                clearTimeout(speechBubbles[id].timer);
+        function triggerTextBubble(id, text) {
+            if (!overlays[id]) return;
+            if (overlays[id].bubbleElement) {
+                overlays[id].bubbleElement.remove();
+                clearTimeout(overlays[id].bubbleTimer);
             }
-
             const bubble = document.createElement('div');
             bubble.className = 'speech-bubble';
             bubble.innerText = text;
-            bubblesContainer.appendChild(bubble);
+            overlaysContainer.appendChild(bubble);
+            overlays[id].bubbleElement = bubble;
 
-            speechBubbles[id] = {
-                element: bubble,
-                timer: setTimeout(() => {
-                    bubble.remove();
-                    delete speechBubbles[id];
-                }, 4000)
-            };
+            overlays[id].bubbleTimer = setTimeout(() => {
+                bubble.remove();
+                overlays[id].bubbleElement = null;
+            }, 4000);
+        }
+
+        const emoteBtn = document.getElementById('emote-btn');
+        const emoteDrawer = document.getElementById('emote-drawer');
+
+        emoteBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            emoteDrawer.style.display = (emoteDrawer.style.display === 'flex') ? 'none' : 'flex';
+        });
+
+        document.querySelectorAll('.emote-option').forEach(el => {
+            el.addEventListener('click', () => {
+                socket.emit('playerEmote', el.innerText);
+                emoteDrawer.style.display = 'none';
+            });
+        });
+
+        window.addEventListener('click', () => { emoteDrawer.style.display = 'none'; });
+
+        socket.on('newPlayerEmote', (data) => {
+            const bubbleEmote = document.createElement('div');
+            bubbleEmote.className = 'floating-emote';
+            bubbleEmote.innerText = data.emote;
+            overlaysContainer.appendChild(bubbleEmote);
+
+            const tempEmoteRef = { element: bubbleEmote, id: data.id };
+            activeEmotes.push(tempEmoteRef);
+
+            setTimeout(() => {
+                bubbleEmote.remove();
+                activeEmotes.splice(activeEmotes.indexOf(tempEmoteRef), 1);
+            }, 1500);
+        });
+
+        const mapBtn = document.getElementById('map-btn');
+        const mapModal = document.getElementById('map-modal');
+        mapBtn.addEventListener('click', () => toggleMap(true));
+        
+        function toggleMap(isOpen) { mapModal.style.display = isOpen ? 'block' : 'none'; }
+
+        function teleportToRegion(x, z) {
+            myPenguin.position.set(x, 0, z);
+            targetPosition.set(x, 0, z);
+            isMoving = false;
+            myPenguin.rotation.z = 0;
+            camera.position.set(x, 22, z + 32);
+            camera.lookAt(x, 0, z);
+            
+            socket.emit('playerMovement', { x: x, z: z, yRot: myPenguin.rotation.y });
+            toggleMap(false);
+        }
+
+        function alignDOMTag(penguinInstance, domElement, heightShift) {
+            if (!penguinInstance || !domElement) return;
+            const modelPosition = penguinInstance.position.clone();
+            modelPosition.y += heightShift;
+            modelPosition.project(camera);
+            const mappedX = (modelPosition.x * 0.5 + 0.5) * window.innerWidth;
+            const mappedY = (modelPosition.y * -0.5 + 0.5) * window.innerHeight;
+            domElement.style.left = `${mappedX}px`;
+            domElement.style.top = `${mappedY}px`;
         }
 
         const clock = new THREE.Clock();
@@ -394,46 +544,34 @@
             if (isMoving) {
                 const distance = myPenguin.position.distanceTo(targetPosition);
                 if (distance > 0.1) {
-                    const targetAngle = Math.atan2(
-                        targetPosition.x - myPenguin.position.x, 
-                        targetPosition.z - myPenguin.position.z
-                    );
+                    const targetAngle = Math.atan2(targetPosition.x - myPenguin.position.x, targetPosition.z - myPenguin.position.z);
                     myPenguin.rotation.y = targetAngle;
 
                     const direction = new THREE.Vector3().subVectors(targetPosition, myPenguin.position).normalize();
                     myPenguin.position.add(direction.multiplyScalar(speed * delta));
+                    myPenguin.rotation.z = Math.sin(Date.now() * 0.015) * 0.15;
 
-                    const time = Date.now() * 0.015;
-                    myPenguin.rotation.z = Math.sin(time) * 0.15;
+                    camera.position.set(myPenguin.position.x, 22, myPenguin.position.z + 32);
+                    camera.lookAt(myPenguin.position.x, 0, myPenguin.position.z);
 
-                    socket.emit('playerMovement', {
-                        x: myPenguin.position.x,
-                        z: myPenguin.position.z,
-                        yRot: myPenguin.rotation.y
-                    });
-
+                    socket.emit('playerMovement', { x: myPenguin.position.x, z: myPenguin.position.z, yRot: myPenguin.rotation.y });
                 } else {
                     isMoving = false;
                     myPenguin.rotation.z = 0; 
                 }
-            } else {
-                socket.emit('playerMovement', { x: myPenguin.position.x, z: myPenguin.position.z, yRot: myPenguin.rotation.y });
             }
 
-            Object.keys(speechBubbles).forEach(id => {
-                let targetPenguin = (id === socket.id) ? myPenguin : otherPlayers[id];
-                
-                if (targetPenguin) {
-                    const headPos = targetPenguin.position.clone();
-                    headPos.y += 3.5; 
-                    headPos.project(camera);
-
-                    const x = (headPos.x * .5 + .5) * window.innerWidth;
-                    const y = (headPos.y * -.5 + .5) * window.innerHeight;
-
-                    speechBubbles[id].element.style.left = `${x}px`;
-                    speechBubbles[id].element.style.top = `${y}px`;
+            Object.keys(overlays).forEach(id => {
+                const targetPenguin = (id === socket.id) ? myPenguin : otherPlayers[id];
+                if (targetPenguin && overlays[id]) {
+                    alignDOMTag(targetPenguin, overlays[id].nameElement, 0.1);
+                    alignDOMTag(targetPenguin, overlays[id].bubbleElement, 3.5);
                 }
+            });
+
+            activeEmotes.forEach(emoteObj => {
+                const targetPenguin = (emoteObj.id === socket.id) ? myPenguin : otherPlayers[emoteObj.id];
+                alignDOMTag(targetPenguin, emoteObj.element, 4.2);
             });
 
             renderer.render(scene, camera);
