@@ -3,450 +3,766 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Game - Club Penguin World</title>
-    
+    <title>Club Penguin World</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
+        :root {
+            --sky-top: #4a90d9;
+            --sky-bottom: #a8d8f0;
+            --snow: #eef5f9;
+            --ice: #cce8f0;
+            --cp-blue: #0077cc;
+            --cp-dark: #003366;
+            --cp-gold: #ffcc00;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            margin: 0;
             overflow: hidden;
-            font-family: Arial, Helvetica, sans-serif;
-            background-color: #E0F7FA;
-            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 600"><rect width="1000" height="600" fill="%23E0F7FA"/><ellipse cx="500" cy="350" rx="350" ry="120" fill="%23B2EBF2" stroke="%2380DEEA" stroke-width="6"/><path d="M-100,-100 Q200,200 500,-100 Z" fill="white"/><path d="M1100,-100 Q800,250 400,-100 Z" fill="white"/><g transform="translate(800, 150)"><circle cx="0" cy="0" r="100" fill="%23FFFFFF"/><path d="M-100,0 A100,100 0 0,1 100,0 Z" fill="%23E0F7FA"/><rect x="-30" y="-10" width="60" height="40" rx="20" fill="%2337474F"/></g><g transform="translate(150, 100) scale(0.7)"><circle cx="0" cy="0" r="100" fill="%23FFFFFF"/><path d="M-100,0 A100,100 0 0,1 100,0 Z" fill="%23E0F7FA"/><rect x="-30" y="-10" width="60" height="40" rx="20" fill="%2337474F"/></g></svg>');
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
+            font-family: 'Nunito', sans-serif;
+            background: linear-gradient(180deg, var(--sky-top) 0%, var(--sky-bottom) 50%, var(--snow) 100%);
+            user-select: none;
         }
 
         #canvas-container {
-            width: 100vw;
-            height: 100vh;
-            display: block;
-            position: absolute;
-            top: 0;
-            left: 0;
+            position: absolute; top: 0; left: 0;
+            width: 100vw; height: 100vh;
             z-index: 1;
         }
-        
-        #bubbles-container {
-            position: absolute;
-            top: 0; left: 0;
+
+        #overlay {
+            position: absolute; top: 0; left: 0;
             width: 100%; height: 100%;
-            pointer-events: none;
-            z-index: 5;
+            pointer-events: none; z-index: 10;
         }
 
-        #ui-container {
+        /* === CP STYLE NAME TAG === */
+        .penguin-name {
             position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, rgba(220, 240, 255, 0.95) 100%);
-            padding: 15px;
-            border-radius: 15px;
-            box-shadow: 0 8px 15px rgba(0,0,0,0.3);
-            width: 450px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            border: 4px solid #003366;
-            z-index: 20;
+            font-family: 'Fredoka One', cursive;
+            font-size: 14px;
+            color: #fff;
+            text-shadow:
+                -1.5px -1.5px 0 #000, 1.5px -1.5px 0 #000,
+                -1.5px 1.5px 0 #000, 1.5px 1.5px 0 #000;
+            pointer-events: none;
+            transform: translate(-50%, 0);
+            white-space: nowrap;
+            z-index: 11;
         }
 
-        .double-stroke-text {
-            color: #FFFFFF;
-            font-size: 32px;
-            font-weight: 900;
-            letter-spacing: 2px;
-            margin: 0;
-            text-align: center;
-            text-transform: uppercase;
-            text-shadow: 
-                -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000,
-                -2px 0 0 #000, 2px 0 0 #000, 0 -2px 0 #000, 0 2px 0 #000,
-                -4px -4px 0 #0056b3, 4px -4px 0 #0056b3, -4px 4px 0 #0056b3, 4px 4px 0 #0056b3,
-                -4px 0 0 #0056b3, 4px 0 0 #0056b3, 0 -4px 0 #0056b3, 0 4px 0 #0056b3,
-                0px 6px 0px rgba(0,0,0,0.3);
-        }
-
-        #chat-log {
-            height: 120px;
-            overflow-y: auto;
-            border: 3px solid #003366;
-            padding: 8px;
-            background: #fff;
-            font-size: 15px;
-            font-weight: bold;
-            border-radius: 8px;
-            box-shadow: inset 0 3px 6px rgba(0,0,0,0.1);
-        }
-        
-        .chat-input-row {
-            display: flex;
-            gap: 8px;
-        }
-        
-        input {
-            padding: 10px;
-            border: 3px solid #003366;
-            border-radius: 8px;
-            font-family: Arial, sans-serif;
-            font-weight: bold;
-            font-size: 16px;
-            outline: none;
-        }
-        input:focus { border-color: #00BFFF; }
-        
-        #username-input { width: 90px; }
-        #message-input { flex-grow: 1; }
-        
-        button {
-            padding: 10px 20px;
-            background: linear-gradient(180deg, #00BFFF 0%, #0056b3 100%);
-            color: white;
-            border: 3px solid #003366;
-            border-radius: 8px;
-            cursor: pointer;
-            font-family: Arial, sans-serif;
-            font-weight: 900;
-            font-size: 18px;
-            letter-spacing: 1px;
-            -webkit-text-stroke: 1px black;
-            box-shadow: 0 4px 0 #003366;
-            transition: transform 0.1s, box-shadow 0.1s;
-        }
-        button:active {
-            transform: translateY(4px);
-            box-shadow: 0 0 0 #003366;
-        }
-        
+        /* === CP STYLE SPEECH BUBBLE === */
         .speech-bubble {
             position: absolute;
-            background: linear-gradient(180deg, #ffffff 0%, #f0f0f0 100%);
-            border: 3px solid black;
-            border-radius: 15px;
-            padding: 10px 15px;
-            font-family: Arial, sans-serif;
-            font-weight: bold;
-            font-size: 15px;
+            background: #fff;
+            border: 3px solid #000;
+            border-radius: 14px;
+            padding: 7px 14px;
+            font-family: 'Nunito', sans-serif;
+            font-weight: 900; font-size: 14px;
+            color: #000;
             pointer-events: none;
             transform: translate(-50%, -100%);
             white-space: nowrap;
-            box-shadow: 4px 4px 0px rgba(0,0,0,0.2);
-            z-index: 10;
+            z-index: 12;
+            animation: bubblePop 0.2s ease-out;
         }
         .speech-bubble::after {
             content: '';
             position: absolute;
-            bottom: -12px;
-            left: 50%;
+            bottom: -11px; left: 50%;
             transform: translateX(-50%);
-            border-width: 12px 12px 0;
+            border-width: 11px 9px 0;
             border-style: solid;
-            border-color: black transparent transparent transparent;
-            display: block;
-            width: 0;
+            border-color: #000 transparent transparent transparent;
         }
         .speech-bubble::before {
             content: '';
             position: absolute;
-            bottom: -8px;
-            left: 50%;
+            bottom: -7px; left: 50%;
             transform: translateX(-50%);
-            border-width: 9px 9px 0;
+            border-width: 8px 6px 0;
             border-style: solid;
-            border-color: #f0f0f0 transparent transparent transparent;
-            display: block;
-            width: 0;
+            border-color: #fff transparent transparent transparent;
             z-index: 1;
+        }
+        @keyframes bubblePop {
+            from { opacity: 0; transform: translate(-50%, -80%) scale(0.5); }
+            to { opacity: 1; transform: translate(-50%, -100%) scale(1); }
+        }
+
+        /* === TOP BAR === */
+        #top-bar {
+            position: absolute; top: 0; left: 0;
+            width: 100%; height: 42px;
+            background: var(--cp-dark);
+            border-bottom: 3px solid var(--cp-gold);
+            display: flex; align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            z-index: 50;
+        }
+        .logo {
+            font-family: 'Fredoka One', cursive;
+            font-size: 19px; color: #fff;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .logo .gold { color: var(--cp-gold); }
+        .room-label {
+            font-family: 'Fredoka One', cursive;
+            font-size: 14px; color: #8abde0;
+        }
+        .status-pill {
+            display: flex; align-items: center; gap: 5px;
+            border: 2px solid #004488;
+            padding: 2px 10px; border-radius: 10px;
+            font-size: 11px; font-weight: 900; color: #8abde0;
+        }
+        .status-dot {
+            width: 7px; height: 7px; border-radius: 50%;
+            background: #44dd66;
+        }
+        .status-dot.off { background: #ff4455; }
+
+        /* === BOTTOM BAR === */
+        #bottom-bar {
+            position: absolute; bottom: 0; left: 0;
+            width: 100%; height: 68px;
+            background: var(--cp-dark);
+            border-top: 3px solid var(--cp-gold);
+            display: flex; align-items: center;
+            padding: 0 12px;
+            z-index: 50;
+            gap: 6px;
+        }
+        .bar-btn {
+            width: 46px; height: 46px;
+            background: var(--cp-blue);
+            border: 2px solid #004488;
+            border-radius: 6px;
+            display: flex; align-items: center; justify-content: center;
+            color: #fff; font-size: 18px;
+            cursor: pointer;
+            position: relative;
+            flex-shrink: 0;
+        }
+        .bar-btn:active { background: #005fa0; }
+        .bar-badge {
+            position: absolute; top: -5px; right: -5px;
+            background: #ff3344; color: #fff;
+            font-size: 9px; font-weight: 900;
+            width: 16px; height: 16px;
+            border-radius: 50%; border: 1.5px solid #fff;
+            display: none; align-items: center; justify-content: center;
+        }
+        .bar-sep {
+            width: 2px; height: 34px;
+            background: #004488;
+            flex-shrink: 0;
+        }
+        .chat-zone {
+            flex-grow: 1; display: flex;
+            flex-direction: column; gap: 3px; min-width: 0;
+        }
+        #bar-chat {
+            height: 28px; overflow: hidden;
+            background: #001a33;
+            border: 2px solid #004488;
+            border-radius: 4px;
+            padding: 2px 8px;
+            font-size: 12px; font-weight: 900;
+            color: #8abde0;
+            line-height: 1.4;
+            white-space: nowrap;
+            scrollbar-width: none;
+        }
+        #bar-chat::-webkit-scrollbar { display: none; }
+        .input-row {
+            display: flex; gap: 4px;
+        }
+        .cp-in {
+            padding: 4px 8px;
+            border: 2px solid #004488;
+            border-radius: 4px;
+            font-family: 'Nunito', sans-serif;
+            font-weight: 900; font-size: 13px;
+            outline: none;
+            background: #001a33;
+            color: #fff;
+        }
+        .cp-in::placeholder { color: #336688; }
+        .cp-in:focus { border-color: var(--cp-gold); }
+        #name-in { width: 68px; flex-shrink: 0; }
+        #msg-in { flex-grow: 1; min-width: 0; }
+        .send-btn {
+            padding: 4px 12px;
+            background: var(--cp-gold);
+            color: var(--cp-dark);
+            border: 2px solid #997700;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: 'Fredoka One', cursive;
+            font-size: 12px;
+            flex-shrink: 0;
+        }
+        .send-btn:active { background: #e6a800; }
+        .penguin-count {
+            font-family: 'Fredoka One', cursive;
+            font-size: 13px; color: var(--cp-gold);
+            flex-shrink: 0;
+        }
+
+        /* === CHAT PANEL === */
+        #chat-panel {
+            position: absolute;
+            bottom: 71px; left: 50%;
+            transform: translateX(-50%);
+            width: min(420px, calc(100vw - 20px));
+            height: 220px;
+            background: var(--cp-dark);
+            border: 3px solid var(--cp-gold);
+            border-bottom: none;
+            border-radius: 10px 10px 0 0;
+            z-index: 49;
+            display: none; flex-direction: column;
+        }
+        #chat-panel.open { display: flex; }
+        .panel-head {
+            display: flex; align-items: center;
+            justify-content: space-between;
+            padding: 6px 12px;
+            border-bottom: 2px solid #004488;
+        }
+        .panel-head span {
+            font-family: 'Fredoka One', cursive;
+            font-size: 13px; color: var(--cp-gold);
+        }
+        .panel-x {
+            background: none; border: none;
+            color: #8abde0; font-size: 16px;
+            cursor: pointer;
+        }
+        #full-log {
+            flex: 1; overflow-y: auto;
+            padding: 6px 10px;
+            font-size: 13px; font-weight: 900;
+            color: #8abde0; line-height: 1.5;
+            scrollbar-width: thin;
+            scrollbar-color: #004488 transparent;
+        }
+        #full-log::-webkit-scrollbar { width: 4px; }
+        #full-log::-webkit-scrollbar-thumb { background: #004488; border-radius: 2px; }
+        .log-line .nm { font-weight: 900; }
+
+        @media (max-width: 600px) {
+            #bottom-bar { height: 60px; gap: 4px; padding: 0 6px; }
+            .bar-btn { width: 38px; height: 38px; font-size: 15px; }
+            .cp-in { font-size: 11px; padding: 3px 6px; }
+            #name-in { width: 52px; }
+            .send-btn { font-size: 10px; padding: 3px 8px; }
+            #bar-chat { height: 22px; font-size: 10px; }
+            .logo { font-size: 15px; }
+            .room-label { font-size: 11px; }
+            .penguin-count { font-size: 11px; }
+            .penguin-name { font-size: 11px; }
+            .speech-bubble { font-size: 12px; padding: 5px 10px; }
         }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <!-- Fix: Import socket.io-client via CDN since it is not served from the root as a local file -->
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 </head>
 <body>
 
-    <div id="canvas-container"></div>
-    <div id="bubbles-container"></div>
+<div id="canvas-container"></div>
+<div id="overlay"></div>
 
-    <div id="ui-container">
-        <h3 class="double-stroke-text">Blizzard</h3>
-        <div id="chat-log"></div>
-        <div class="chat-input-row">
-            <input type="text" id="username-input" placeholder="Name" value="Penguin" maxlength="10">
-            <input type="text" id="message-input" placeholder="Type a message..." maxlength="50">
-            <button id="send-btn">SEND</button>
+<header id="top-bar">
+    <div class="logo">
+        <i class="fas fa-snowflake" style="color:var(--cp-gold)"></i>
+        CLUB PENGUIN <span class="gold">WORLD</span>
+    </div>
+    <span class="room-label"><i class="fas fa-map-marker-alt" style="margin-right:4px"></i>Ice Pond</span>
+    <div class="status-pill">
+        <span class="status-dot" id="s-dot"></span>
+        <span id="s-txt">Online</span>
+    </div>
+</header>
+
+<div id="chat-panel">
+    <div class="panel-head">
+        <span><i class="fas fa-comments" style="margin-right:5px"></i>Chat</span>
+        <button class="panel-x" id="panel-x"><i class="fas fa-times"></i></button>
+    </div>
+    <div id="full-log"></div>
+</div>
+
+<nav id="bottom-bar">
+    <button class="bar-btn" id="b-peng"><i class="fas fa-user"></i></button>
+    <button class="bar-btn" id="b-inv"><i class="fas fa-box-open"></i></button>
+    <button class="bar-btn" id="b-emo"><i class="fas fa-laugh-beam"></i></button>
+    <button class="bar-btn" id="b-chat">
+        <i class="fas fa-comment-dots"></i>
+        <span class="bar-badge" id="badge">0</span>
+    </button>
+    <div class="bar-sep"></div>
+    <div class="chat-zone">
+        <div id="bar-chat"></div>
+        <div class="input-row">
+            <input type="text" class="cp-in" id="name-in" placeholder="Name" value="Penguin" maxlength="12">
+            <input type="text" class="cp-in" id="msg-in" placeholder="Say something..." maxlength="60">
+            <button class="send-btn" id="send-b">SEND</button>
         </div>
     </div>
+    <div class="bar-sep"></div>
+    <span class="penguin-count"><i class="fas fa-users" style="margin-right:4px"></i><span id="p-count">1</span></span>
+</nav>
 
-    <script>
-        const socket = io();
-        const otherPlayers = {}; 
-        const speechBubbles = {}; 
+<script>
+/* ==============================
+   Config & Helpers
+============================== */
+const SCARF_COLS = [
+    0xff4444,0x00cc66,0xff8800,0xcc44ff,0x00aaff,
+    0xffcc00,0xff66aa,0x44ddcc,0xff5577,0x8866ff,
+    0x22ccaa,0xff6633,0x55bbff,0xaaee22,0xff44aa
+];
+const SPEED = 6;
+const LERP = 0.12;
+const POND_R = 20;
 
-        const container = document.getElementById('canvas-container');
-        const bubblesContainer = document.getElementById('bubbles-container');
-        
-        const scene = new THREE.Scene();
+function hash(s){let h=0;for(let i=0;i<s.length;i++)h=s.charCodeAt(i)+((h<<5)-h);return h}
+function scarfOf(id){return SCARF_COLS[Math.abs(hash(id||'x'))%SCARF_COLS.length]}
+function hex2css(h){return'#'+h.toString(16).padStart(6,'0')}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
 
-        const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 1000);
-        camera.position.set(0, 20, 30);
-        camera.lookAt(0, 0, 0);
+/* ==============================
+   Three.js Scene
+============================== */
+const ct = document.getElementById('canvas-container');
+const ov = document.getElementById('overlay');
+const scene = new THREE.Scene();
+scene.fog = new THREE.Fog(0x8ec8e8, 40, 80);
 
-        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setClearColor(0x000000, 0); 
-        renderer.shadowMap.enabled = true;
-        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-        container.appendChild(renderer.domElement);
+const cam = new THREE.PerspectiveCamera(36, innerWidth/innerHeight, 0.1, 200);
+cam.position.set(0, 18, 28);
+cam.lookAt(0, 0, 0);
 
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
-        scene.add(ambientLight);
-        
-        const dirLight = new THREE.DirectionalLight(0xffffff, 0.6);
-        dirLight.position.set(10, 20, 10);
-        dirLight.castShadow = true;
-        dirLight.shadow.camera.left = -25;
-        dirLight.shadow.camera.right = 25;
-        dirLight.shadow.camera.top = 25;
-        dirLight.shadow.camera.bottom = -25;
-        dirLight.shadow.mapSize.width = 1024;
-        dirLight.shadow.mapSize.height = 1024;
-        scene.add(dirLight);
+const ren = new THREE.WebGLRenderer({antialias:true, alpha:true});
+ren.setSize(innerWidth, innerHeight);
+ren.setPixelRatio(Math.min(devicePixelRatio, 2));
+ren.setClearColor(0x000000, 0);
+ren.shadowMap.enabled = true;
+ren.shadowMap.type = THREE.PCFSoftShadowMap;
+ct.appendChild(ren.domElement);
 
-        const groundGeo = new THREE.PlaneGeometry(150, 150);
-        const groundMat = new THREE.ShadowMaterial({ opacity: 0.3 }); 
-        const ground = new THREE.Mesh(groundGeo, groundMat);
-        ground.rotation.x = -Math.PI / 2;
-        ground.receiveShadow = true; 
-        scene.add(ground);
+/* Lights — flat, cartoony */
+scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+const sun = new THREE.DirectionalLight(0xffffff, 0.5);
+sun.position.set(8, 20, 12);
+sun.castShadow = true;
+sun.shadow.camera.left = -25; sun.shadow.camera.right = 25;
+sun.shadow.camera.top = 25; sun.shadow.camera.bottom = -25;
+sun.shadow.mapSize.set(1024, 1024);
+scene.add(sun);
+scene.add(new THREE.DirectionalLight(0x88ccff, 0.25).translateX(-8).translateY(8));
 
-        function createPenguin() {
-            const penguinGroup = new THREE.Group();
-            
-            const bodyMat = new THREE.MeshStandardMaterial({ color: 0x222222 });
-            const bellyMat = new THREE.MeshStandardMaterial({ color: 0xffffff });
-            const beakMat = new THREE.MeshStandardMaterial({ color: 0xffaa00 });
+/* ==============================
+   Ground & Ice Pond
+============================== */
+// Snow ground
+const snowMat = new THREE.MeshStandardMaterial({color:0xe8f2f8, roughness:0.95});
+const snowGround = new THREE.Mesh(new THREE.PlaneGeometry(200,200), snowMat);
+snowGround.rotation.x = -Math.PI/2;
+snowGround.position.y = -0.05;
+snowGround.receiveShadow = true;
+scene.add(snowGround);
 
-            const bodyGeo = new THREE.CylinderGeometry(0.8, 1, 1.8, 16);
-            const body = new THREE.Mesh(bodyGeo, bodyMat);
-            body.position.y = 1.2;
-            body.castShadow = true;
-            penguinGroup.add(body);
+// Ice pond
+const iceTex = (()=>{
+    const c=document.createElement('canvas');c.width=512;c.height=512;
+    const x=c.getContext('2d');
+    x.fillStyle='#c8e4ee';x.fillRect(0,0,512,512);
+    x.strokeStyle='rgba(140,210,230,0.4)';x.lineWidth=1;
+    for(let i=0;i<30;i++){
+        x.beginPath();let px=Math.random()*512,py=Math.random()*512;x.moveTo(px,py);
+        for(let j=0;j<5;j++){px+=(Math.random()-0.5)*80;py+=(Math.random()-0.5)*80;x.lineTo(px,py);}
+        x.stroke();
+    }
+    for(let i=0;i<12;i++){
+        x.fillStyle=`rgba(210,240,248,${0.2+Math.random()*0.3})`;
+        x.beginPath();x.arc(Math.random()*512,Math.random()*512,20+Math.random()*40,0,Math.PI*2);x.fill();
+    }
+    const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;return t;
+})();
+const iceDisc = new THREE.Mesh(
+    new THREE.CylinderGeometry(POND_R, POND_R, 0.2, 64),
+    new THREE.MeshStandardMaterial({map:iceTex, roughness:0.08, metalness:0.05, transparent:true, opacity:0.85})
+);
+iceDisc.position.y = 0;
+iceDisc.receiveShadow = true;
+scene.add(iceDisc);
 
-            const bellyGeo = new THREE.CylinderGeometry(0.6, 0.75, 1.4, 16);
-            const belly = new THREE.Mesh(bellyGeo, bellyMat);
-            belly.position.set(0, 1.2, 0.3);
-            belly.scale.set(1, 1, 0.5); 
-            belly.castShadow = true;
-            penguinGroup.add(belly);
+// Invisible raycast plane
+const rayPlane = new THREE.Mesh(
+    new THREE.PlaneGeometry(200,200),
+    new THREE.MeshBasicMaterial({visible:false})
+);
+rayPlane.rotation.x = -Math.PI/2;
+rayPlane.position.y = 0.01;
+scene.add(rayPlane);
 
-            const headGeo = new THREE.SphereGeometry(0.8, 16, 16);
-            const head = new THREE.Mesh(headGeo, bodyMat);
-            head.position.y = 2.4;
-            head.castShadow = true;
-            penguinGroup.add(head);
+/* ==============================
+   Snow Mounds
+============================== */
+const moundMat = new THREE.MeshStandardMaterial({color:0xeef6f9, roughness:0.95});
+[
+    [-17,0,3.2],[17,-6,2.8],[0,-18,3.5],[6,18,3],[12,14,2.4],
+    [-12,-15,2.2],[-19,9,2.6],[19,7,2.5],[-8,16,2],[14,-14,2.1]
+].forEach(([x,z,s])=>{
+    const m=new THREE.Mesh(new THREE.SphereGeometry(s,16,8,0,Math.PI*2,0,Math.PI/2),moundMat);
+    m.position.set(x,-0.05,z);m.scale.y=0.3;m.receiveShadow=true;scene.add(m);
+});
 
-            const beakGeo = new THREE.ConeGeometry(0.25, 0.6, 16);
-            const beak = new THREE.Mesh(beakGeo, beakMat);
-            beak.rotation.x = Math.PI / 2;
-            beak.position.set(0, 2.4, 0.8);
-            beak.castShadow = true;
-            penguinGroup.add(beak);
+/* ==============================
+   Trees
+============================== */
+function makeTree(x,z,s){
+    const g=new THREE.Group();
+    const trunk=new THREE.Mesh(new THREE.CylinderGeometry(0.15*s,0.2*s,1.2*s,8),new THREE.MeshStandardMaterial({color:0x5c3a1e,roughness:0.9}));
+    trunk.position.y=0.6*s;trunk.castShadow=true;g.add(trunk);
+    const leafMat=new THREE.MeshStandardMaterial({color:0x1e6b30,roughness:0.85});
+    [{y:1.6,r:1.2,h:1.8},{y:2.6,r:0.9,h:1.5},{y:3.4,r:0.6,h:1.2}].forEach(l=>{
+        const c=new THREE.Mesh(new THREE.ConeGeometry(l.r*s,l.h*s,8),leafMat);
+        c.position.y=l.y*s;c.castShadow=true;g.add(c);
+    });
+    const snowCap=new THREE.Mesh(new THREE.ConeGeometry(0.55*s,0.4*s,8),new THREE.MeshStandardMaterial({color:0xf0f8ff,roughness:0.9}));
+    snowCap.position.y=3.8*s;g.add(snowCap);
+    g.position.set(x,0,z);scene.add(g);return g;
+}
+makeTree(-14,-8,1.1);makeTree(-16,-5,0.8);makeTree(15,-10,1);
+makeTree(16,-7,0.7);makeTree(-13,12,0.9);makeTree(13,11,1.05);
+makeTree(-18,5,0.75);makeTree(18,4,0.85);makeTree(0,-19,0.7);
 
-            const flipperGeo = new THREE.BoxGeometry(0.2, 1, 0.4);
-            const leftFlipper = new THREE.Mesh(flipperGeo, bodyMat);
-            leftFlipper.position.set(-1.0, 1.4, 0);
-            leftFlipper.rotation.z = Math.PI / 6;
-            leftFlipper.castShadow = true;
-            penguinGroup.add(leftFlipper);
+/* ==============================
+   Ice Blocks
+============================== */
+const blkMat=new THREE.MeshStandardMaterial({color:0xd0f0f8,roughness:0.12,transparent:true,opacity:0.6});
+[[−13,−9,1.4,1.8,1.1,0.3],[14,−5,1.7,2.1,1.2,−0.5],[−9,14,1.1,1.3,0.9,0.8],[11,12,1.5,1.7,1,−0.2]].forEach(b=>{
+    // Using manual values to avoid encoding issues
+});
+// Re-do ice blocks safely
+[{x:-13,z:-9,sx:1.4,sy:1.8,sz:1.1,ry:0.3},{x:14,z:-5,sx:1.7,sy:2.1,sz:1.2,ry:-0.5},
+ {x:-9,z:14,sx:1.1,sy:1.3,sz:0.9,ry:0.8},{x:11,z:12,sx:1.5,sy:1.7,sz:1,ry:-0.2},
+ {x:-17,z:4,sx:0.9,sy:1.1,sz:0.7,ry:1.1},{x:17,z:3,sx:1.2,sy:1.4,sz:0.8,ry:0.6}
+].forEach(b=>{
+    const m=new THREE.Mesh(new THREE.BoxGeometry(b.sx,b.sy,b.sz),blkMat);
+    m.position.set(b.x,b.sy*0.5,b.z);m.rotation.y=b.ry;m.castShadow=true;m.receiveShadow=true;scene.add(m);
+});
 
-            const rightFlipper = new THREE.Mesh(flipperGeo, bodyMat);
-            rightFlipper.position.set(1.0, 1.4, 0);
-            rightFlipper.rotation.z = -Math.PI / 6;
-            rightFlipper.castShadow = true;
-            penguinGroup.add(rightFlipper);
+/* ==============================
+   Snow Particles
+============================== */
+const SNOW_N=600;
+const snowPos=new Float32Array(SNOW_N*3);
+const snowSpd=[];
+for(let i=0;i<SNOW_N;i++){
+    snowPos[i*3]=(Math.random()-0.5)*70;
+    snowPos[i*3+1]=Math.random()*25;
+    snowPos[i*3+2]=(Math.random()-0.5)*70;
+    snowSpd.push(0.5+Math.random()*1.5);
+}
+const snowGeo=new THREE.BufferGeometry();
+snowGeo.setAttribute('position',new THREE.BufferAttribute(snowPos,3));
+const snowTex=(()=>{
+    const c=document.createElement('canvas');c.width=32;c.height=32;
+    const x=c.getContext('2d');
+    const g=x.createRadialGradient(16,16,0,16,16,16);
+    g.addColorStop(0,'rgba(255,255,255,1)');g.addColorStop(0.35,'rgba(255,255,255,0.5)');g.addColorStop(1,'rgba(255,255,255,0)');
+    x.fillStyle=g;x.fillRect(0,0,32,32);return new THREE.CanvasTexture(c);
+})();
+const snowPts=new THREE.Points(snowGeo,new THREE.PointsMaterial({map:snowTex,size:0.3,transparent:true,opacity:0.7,depthWrite:false,blending:THREE.AdditiveBlending}));
+scene.add(snowPts);
 
-            const footGeo = new THREE.BoxGeometry(0.4, 0.15, 0.7);
-            const leftFoot = new THREE.Mesh(footGeo, beakMat);
-            leftFoot.position.set(-0.4, 0.1, 0.3);
-            leftFoot.castShadow = true;
-            penguinGroup.add(leftFoot);
+function tickSnow(dt){
+    const p=snowGeo.attributes.position.array;const t=Date.now()*0.0004;
+    for(let i=0;i<SNOW_N;i++){
+        p[i*3+1]-=snowSpd[i]*dt;
+        p[i*3]+=Math.sin(t+i*0.7)*0.01;
+        p[i*3+2]+=Math.cos(t+i*1.1)*0.007;
+        if(p[i*3+1]<-0.5){p[i*3+1]=24+Math.random()*4;p[i*3]=(Math.random()-0.5)*70;p[i*3+2]=(Math.random()-0.5)*70;}
+    }
+    snowGeo.attributes.position.needsUpdate=true;
+}
 
-            const rightFoot = new THREE.Mesh(footGeo, beakMat);
-            rightFoot.position.set(0.4, 0.1, 0.3);
-            rightFoot.castShadow = true;
-            penguinGroup.add(rightFoot);
+/* ==============================
+   Penguin Factory (Flat, CP-style)
+============================== */
+const mBody=new THREE.MeshToonMaterial({color:0x111111});
+const mBelly=new THREE.MeshToonMaterial({color:0xfafafa});
+const mBeak=new THREE.MeshToonMaterial({color:0xff8c00});
+const mEyeW=new THREE.MeshToonMaterial({color:0xffffff});
+const mPupil=new THREE.MeshToonMaterial({color:0x111111});
 
-            scene.add(penguinGroup);
-            return penguinGroup;
-        }
+const gBody=new THREE.CylinderGeometry(0.65,0.82,1.4,16);
+const gBelly=new THREE.SphereGeometry(0.48,16,12);
+const gHead=new THREE.SphereGeometry(0.62,16,16);
+const gBeak=new THREE.ConeGeometry(0.15,0.34,8);
+const gFlip=new THREE.BoxGeometry(0.14,0.7,0.3);
+const gFoot=new THREE.BoxGeometry(0.3,0.1,0.46);
+const gEyeW=new THREE.SphereGeometry(0.13,8,8);
+const gPupil=new THREE.SphereGeometry(0.065,8,8);
+const gScarfW=new THREE.TorusGeometry(0.5,0.08,8,16);
+const gScarfT=new THREE.BoxGeometry(0.14,0.44,0.05);
 
-        const myPenguin = createPenguin();
+function makePenguin(id){
+    const g=new THREE.Group();
+    const sc=new THREE.MeshToonMaterial({color:scarfOf(id)});
 
-        socket.on('currentPlayers', (players) => {
-            Object.keys(players).forEach((id) => {
-                if (id === socket.id) return; 
-                const p = createPenguin();
-                p.position.set(players[id].x, 0, players[id].z);
-                otherPlayers[id] = p;
-            });
-        });
+    const body=new THREE.Mesh(gBody,mBody);body.position.y=1.05;body.castShadow=true;g.add(body);
+    const belly=new THREE.Mesh(gBelly,mBelly);belly.position.set(0,1.05,0.28);belly.scale.set(1,1,0.5);g.add(belly);
+    const head=new THREE.Mesh(gHead,mBody);head.position.y=2.15;head.castShadow=true;g.add(head);
+    const beak=new THREE.Mesh(gBeak,mBeak);beak.rotation.x=Math.PI/2;beak.position.set(0,2.1,0.7);g.add(beak);
 
-        socket.on('newPlayer', (data) => {
-            const p = createPenguin();
-            p.position.set(data.playerInfo.x, 0, data.playerInfo.z);
-            otherPlayers[data.id] = p;
-        });
+    const le=new THREE.Mesh(gEyeW,mEyeW);le.position.set(-0.22,2.25,0.5);g.add(le);
+    const re=new THREE.Mesh(gEyeW,mEyeW);re.position.set(0.22,2.25,0.5);g.add(re);
+    const lp=new THREE.Mesh(gPupil,mPupil);lp.position.set(-0.22,2.27,0.6);g.add(lp);
+    const rp=new THREE.Mesh(gPupil,mPupil);rp.position.set(0.22,2.27,0.6);g.add(rp);
 
-        socket.on('playerMoved', (data) => {
-            if (otherPlayers[data.id]) {
-                otherPlayers[data.id].position.set(data.x, 0, data.z);
-                otherPlayers[data.id].rotation.y = data.yRot;
-                const time = Date.now() * 0.015;
-                otherPlayers[data.id].rotation.z = Math.sin(time) * 0.15;
+    const lf=new THREE.Mesh(gFlip,mBody);lf.position.set(-0.88,1.25,0);lf.rotation.z=Math.PI/6;lf.castShadow=true;g.add(lf);
+    const rf=new THREE.Mesh(gFlip,mBody);rf.position.set(0.88,1.25,0);rf.rotation.z=-Math.PI/6;rf.castShadow=true;g.add(rf);
+
+    const lft=new THREE.Mesh(gFoot,mBeak);lft.position.set(-0.34,0.06,0.24);g.add(lft);
+    const rft=new THREE.Mesh(gFoot,mBeak);rft.position.set(0.34,0.06,0.24);g.add(rft);
+
+    const sw=new THREE.Mesh(gScarfW,sc);sw.position.y=1.7;sw.rotation.x=Math.PI/2;g.add(sw);
+    const st=new THREE.Mesh(gScarfT,sc);st.position.set(0.3,1.45,0.28);st.rotation.z=-0.3;g.add(st);
+
+    g.userData={lf,rf,body,lft,rft,st,w:false};
+    scene.add(g);return g;
+}
+
+/* ==============================
+   Player State
+============================== */
+const me=makePenguin('self');
+const others={};
+const targets={};
+const tags={};
+const bubbles={};
+let pCount=1, unread=0, panelOpen=false;
+
+function ensureTag(id,name){
+    if(!tags[id]){
+        const el=document.createElement('div');el.className='penguin-name';
+        el.textContent=name||'Penguin';ov.appendChild(el);
+        tags[id]={el,name:name||'Penguin'};
+    }
+    return tags[id];
+}
+function setTagName(id,n){if(tags[id]&&n){tags[id].name=n;tags[id].el.textContent=n;}}
+function updCount(){document.getElementById('p-count').textContent=pCount;}
+
+/* ==============================
+   Socket Events
+============================== */
+const sDot=document.getElementById('s-dot');
+const sTxt=document.getElementById('s-txt');
+socket.on('connect',()=>{sDot.className='status-dot';sTxt.textContent='Online';});
+socket.on('disconnect',()=>{sDot.className='status-dot off';sTxt.textContent='Offline';});
+
+socket.on('currentPlayers',pl=>{
+    const ids=Object.keys(pl);pCount=ids.length+1;updCount();
+    ids.forEach(id=>{
+        if(id===socket.id)return;
+        if(!others[id]){const p=makePenguin(id);p.position.set(pl[id].x,0,pl[id].z);others[id]=p;ensureTag(id);}
+    });
+});
+socket.on('newPlayer',d=>{
+    if(others[d.id])return;
+    const p=makePenguin(d.id);p.position.set(d.playerInfo.x,0,d.playerInfo.z);
+    others[d.id]=p;ensureTag(d.id);pCount++;updCount();
+});
+socket.on('playerMoved',d=>{
+    if(others[d.id])targets[d.id]={x:d.x,z:d.z,yr:d.yr,t:Date.now()};
+});
+socket.on('playerDisconnected',id=>{
+    if(others[id]){scene.remove(others[id]);delete others[id];delete targets[id];}
+    if(tags[id]){tags[id].el.remove();delete tags[id];}
+    if(bubbles[id]){bubbles[id].el.remove();clearTimeout(bubbles[id].t);delete bubbles[id];}
+    pCount=Math.max(1,pCount-1);updCount();
+});
+
+/* ==============================
+   Click to Move
+============================== */
+const ray=new THREE.Raycaster();
+const mv=new THREE.Vector2();
+let tgtPos=new THREE.Vector3(0,0,0);
+let moving=false;
+
+addEventListener('pointerdown',e=>{
+    if(e.target.closest('#bottom-bar')||e.target.closest('#top-bar')||e.target.closest('#chat-panel'))return;
+    mv.x=(e.clientX/innerWidth)*2-1;mv.y=-(e.clientY/innerHeight)*2+1;
+    ray.setFromCamera(mv,cam);
+    const h=ray.intersectObject(rayPlane);
+    if(h.length>0){
+        const pt=h[0].point;
+        const d=Math.sqrt(pt.x*pt.x+pt.z*pt.z);
+        if(d>POND_R-1.5){const s=(POND_R-1.5)/Math.max(0.01,d);pt.x*=s;pt.z*=s;}
+        tgtPos.set(pt.x,0,pt.z);moving=true;
+    }
+});
+
+/* ==============================
+   Chat
+============================== */
+const nameIn=document.getElementById('name-in');
+const msgIn=document.getElementById('msg-in');
+const barChat=document.getElementById('bar-chat');
+const fullLog=document.getElementById('full-log');
+const badge=document.getElementById('badge');
+const panel=document.getElementById('chat-panel');
+
+function send(){
+    const u=nameIn.value.trim()||'Penguin',m=msgIn.value.trim();
+    if(!m)return;socket.emit('chatMessage',{username:u,msg:m});msgIn.value='';msgIn.focus();
+}
+document.getElementById('send-b').addEventListener('click',send);
+msgIn.addEventListener('keypress',e=>{if(e.key==='Enter')send();});
+
+document.getElementById('b-chat').addEventListener('click',()=>{
+    panelOpen=!panelOpen;panel.classList.toggle('open',panelOpen);
+    if(panelOpen){unread=0;badge.style.display='none';fullLog.scrollTop=fullLog.scrollHeight;}
+});
+document.getElementById('panel-x').addEventListener('click',()=>{panelOpen=false;panel.classList.remove('open');});
+
+['b-peng','b-inv','b-emo'].forEach(id=>document.getElementById(id).addEventListener('click',function(){this.style.opacity='0.6';setTimeout(()=>this.style.opacity='1',120);}));
+
+socket.on('newChatMessage',d=>{
+    setTagName(d.id,d.username);
+    const col=hex2css(scarfOf(d.id));
+    const html=`<span class="nm" style="color:${col}">${d.username}:</span> ${d.msg}`;
+
+    const s=document.createElement('span');s.innerHTML=html+'&nbsp;&nbsp;';barChat.appendChild(s);barChat.scrollLeft=barChat.scrollWidth;
+
+    const f=document.createElement('div');f.className='log-line';f.innerHTML=html;fullLog.appendChild(f);
+    while(fullLog.children.length>100)fullLog.removeChild(fullLog.firstChild);
+    fullLog.scrollTop=fullLog.scrollHeight;
+
+    if(!panelOpen){unread++;badge.style.display='flex';badge.textContent=unread>9?'9+':unread;}
+    spawnBubble(d.id,d.msg);
+});
+
+function spawnBubble(id,text){
+    if(bubbles[id]){bubbles[id].el.remove();clearTimeout(bubbles[id].t);}
+    const el=document.createElement('div');el.className='speech-bubble';el.innerText=text;ov.appendChild(el);
+    bubbles[id]={el,t:setTimeout(()=>{el.remove();delete bubbles[id];},4500)};
+}
+
+/* ==============================
+   Animation Helpers
+============================== */
+function waddle(p,t,int){
+    const d=p.userData;
+    d.lf.rotation.z=Math.PI/6+Math.sin(t)*0.42*int;
+    d.rf.rotation.z=-Math.PI/6-Math.sin(t)*0.42*int;
+    d.body.rotation.z=Math.sin(t)*0.06*int;
+    d.lft.position.z=0.24+Math.sin(t)*0.09*int;
+    d.rft.position.z=0.24-Math.sin(t)*0.09*int;
+    d.st.rotation.z=-0.3+Math.sin(t*1.3)*0.14*int;
+}
+function idleP(p,t){
+    const d=p.userData;
+    d.lf.rotation.z=Math.PI/6;d.rf.rotation.z=-Math.PI/6;
+    d.body.rotation.z=0;d.lft.position.z=0.24;d.rft.position.z=0.24;
+    d.st.rotation.z=-0.3+Math.sin(t*0.5)*0.04;
+    d.body.scale.set(1,1+Math.sin(t*0.4)*0.01,1);
+}
+
+function toScreen(pos,yOff){
+    const v=pos.clone();v.y+=yOff;v.project(cam);
+    return{x:(v.x*0.5+0.5)*innerWidth,y:(v.y*-0.5+0.5)*innerHeight,behind:v.z>1};
+}
+
+/* ==============================
+   Main Loop
+============================== */
+const clk=new THREE.Clock();
+let lastEmit=0;
+
+function loop(){
+    requestAnimationFrame(loop);
+    const dt=Math.min(clk.getDelta(),0.05);
+    const now=Date.now();
+    const wt=now*0.008;
+
+    // My movement
+    if(moving){
+        const dx=tgtPos.x-me.position.x, dz=tgtPos.z-me.position.z;
+        const dist=Math.sqrt(dx*dx+dz*dz);
+        if(dist>0.08){
+            const ang=Math.atan2(dx,dz);
+            me.rotation.y=ang;
+            const dir=new THREE.Vector3(dx,0,dz).normalize();
+            me.position.add(dir.multiplyScalar(SPEED*dt));
+            waddle(me,wt,1);me.userData.w=true;
+            if(now-lastEmit>50){
+                socket.emit('playerMovement',{x:me.position.x,z:me.position.z,yRot:me.rotation.y});
+                lastEmit=now;
             }
-        });
+        }else{moving=false;me.userData.w=false;}
+    }
+    if(!me.userData.w)idleP(me,wt*0.5);
+    ensureTag('self',nameIn.value.trim()||'Penguin');
 
-        socket.on('playerDisconnected', (id) => {
-            if (otherPlayers[id]) {
-                scene.remove(otherPlayers[id]);
-                delete otherPlayers[id];
-            }
-        });
+    // Others
+    Object.keys(others).forEach(id=>{
+        const p=others[id],tg=targets[id];
+        if(!tg)return;
+        const dx=tg.x-p.position.x, dz=tg.z-p.position.z;
+        const moved=Math.abs(dx)>0.01||Math.abs(dz)>0.01;
+        p.position.x+=dx*LERP;p.position.z+=dz*LERP;
 
-        const raycaster = new THREE.Raycaster();
-        const mouse = new THREE.Vector2();
-        let targetPosition = new THREE.Vector3(0, 0, 0);
-        let isMoving = false;
+        let ad=tg.yr-p.rotation.y;
+        while(ad>Math.PI)ad-=Math.PI*2;while(ad<-Math.PI)ad+=Math.PI*2;
+        p.rotation.y+=ad*LERP;
 
-        window.addEventListener('pointerdown', (event) => {
-            if (event.target.closest('#ui-container')) return;
+        const age=now-tg.t;
+        if(moved&&age<500){waddle(p,wt,1);p.userData.w=true;}
+        else{if(p.userData.w)p.userData.w=false;idleP(p,wt*0.5+hash(id)*0.001);}
+    });
 
-            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+    // Name tags (under penguin)
+    Object.keys(tags).forEach(id=>{
+        const p=(id==='self')?me:others[id];
+        if(!p){tags[id].el.style.display='none';return;}
+        const s=toScreen(p.position,0.4);
+        if(s.behind){tags[id].el.style.display='none';return;}
+        tags[id].el.style.display='';tags[id].el.style.left=s.x+'px';tags[id].el.style.top=s.y+'px';
+    });
 
-            raycaster.setFromCamera(mouse, camera);
-            const intersects = raycaster.intersectObject(ground);
+    // Bubbles (above head)
+    Object.keys(bubbles).forEach(id=>{
+        const p=(id===socket.id)?me:others[id];
+        if(!p){bubbles[id].el.style.display='none';return;}
+        const s=toScreen(p.position,3.5);
+        if(s.behind){bubbles[id].el.style.display='none';return;}
+        bubbles[id].el.style.display='';bubbles[id].el.style.left=s.x+'px';bubbles[id].el.style.top=s.y+'px';
+    });
 
-            if (intersects.length > 0) {
-                targetPosition.copy(intersects[0].point);
-                targetPosition.y = 0; 
-                isMoving = true;
-            }
-        });
+    tickSnow(dt);
+    ren.render(scene,cam);
+}
 
-        const chatLog = document.getElementById('chat-log');
-        const usernameInput = document.getElementById('username-input');
-        const messageInput = document.getElementById('message-input');
-        const sendBtn = document.getElementById('send-btn');
+/* ==============================
+   Resize
+============================== */
+addEventListener('resize',()=>{
+    cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix();
+    ren.setSize(innerWidth,innerHeight);
+});
 
-        function sendServerMessage() {
-            const user = usernameInput.value.trim() || 'Penguin';
-            const msg = messageInput.value.trim();
-            if (!msg) return;
-
-            socket.emit('chatMessage', { username: user, msg: msg });
-            messageInput.value = '';
-        }
-
-        sendBtn.addEventListener('click', sendServerMessage);
-        messageInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') sendServerMessage();
-        });
-
-        socket.on('newChatMessage', (data) => {
-            const msgDiv = document.createElement('div');
-            msgDiv.style.marginBottom = "4px";
-            msgDiv.innerHTML = `<strong>${data.username}:</strong> ${data.msg}`;
-            chatLog.appendChild(msgDiv);
-            chatLog.scrollTop = chatLog.scrollHeight; 
-
-            spawnSpeechBubble(data.id, data.msg);
-        });
-
-        function spawnSpeechBubble(id, text) {
-            if (speechBubbles[id]) {
-                speechBubbles[id].element.remove();
-                clearTimeout(speechBubbles[id].timer);
-            }
-
-            const bubble = document.createElement('div');
-            bubble.className = 'speech-bubble';
-            bubble.innerText = text;
-            bubblesContainer.appendChild(bubble);
-
-            speechBubbles[id] = {
-                element: bubble,
-                timer: setTimeout(() => {
-                    bubble.remove();
-                    delete speechBubbles[id];
-                }, 4000)
-            };
-        }
-
-        const clock = new THREE.Clock();
-        const speed = 7.0; 
-
-        function animate() {
-            requestAnimationFrame(animate);
-            const delta = clock.getDelta();
-
-            if (isMoving) {
-                const distance = myPenguin.position.distanceTo(targetPosition);
-                if (distance > 0.1) {
-                    const targetAngle = Math.atan2(
-                        targetPosition.x - myPenguin.position.x, 
-                        targetPosition.z - myPenguin.position.z
-                    );
-                    myPenguin.rotation.y = targetAngle;
-
-                    const direction = new THREE.Vector3().subVectors(targetPosition, myPenguin.position).normalize();
-                    myPenguin.position.add(direction.multiplyScalar(speed * delta));
-
-                    const time = Date.now() * 0.015;
-                    myPenguin.rotation.z = Math.sin(time) * 0.15;
-
-                    socket.emit('playerMovement', {
-                        x: myPenguin.position.x,
-                        z: myPenguin.position.z,
-                        yRot: myPenguin.rotation.y
-                    });
-
-                } else {
-                    isMoving = false;
-                    myPenguin.rotation.z = 0; 
-                }
-            } else {
-                socket.emit('playerMovement', { x: myPenguin.position.x, z: myPenguin.position.z, yRot: myPenguin.rotation.y });
-            }
-
-            Object.keys(speechBubbles).forEach(id => {
-                let targetPenguin = (id === socket.id) ? myPenguin : otherPlayers[id];
-                
-                if (targetPenguin) {
-                    const headPos = targetPenguin.position.clone();
-                    headPos.y += 3.5; 
-                    headPos.project(camera);
-
-                    const x = (headPos.x * .5 + .5) * window.innerWidth;
-                    const y = (headPos.y * -.5 + .5) * window.innerHeight;
-
-                    speechBubbles[id].element.style.left = `${x}px`;
-                    speechBubbles[id].element.style.top = `${y}px`;
-                }
-            });
-
-            renderer.render(scene, camera);
-        }
-
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        });
-
-        animate();
-    </script>
+loop();
+</script>
 </body>
 </html>
