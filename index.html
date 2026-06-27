@@ -3,414 +3,1254 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Multiplayer Penguin Chat - Expanded Edition</title>
+    <title>Club Penguin 2008 Multiplayer Sandbox</title>
+    
+    <!-- Tailwind CSS & Web Libraries -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
     
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Quicksand:wght@500;700&display=swap');
+
+        /* Retro 2008 Comic Layout Style */
         body {
             margin: 0;
             overflow: hidden;
-            font-family: Arial, Helvetica, sans-serif;
-            background-color: #E0F7FA;
-            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 600"><rect width="1000" height="600" fill="%23E0F7FA"/><ellipse cx="500" cy="350" rx="350" ry="120" fill="%23B2EBF2" stroke="%2380DEEA" stroke-width="6"/><path d="M-100,-100 Q200,200 500,-100 Z" fill="white"/><path d="M1100,-100 Q800,250 400,-100 Z" fill="white"/></svg>');
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
+            font-family: 'Quicksand', sans-serif;
+            background-color: #001A33;
             user-select: none;
+            transition: background 0.5s ease;
+        }
+
+        h1, h2, h3, .font-cp {
+            font-family: 'Fredoka One', cursive;
+        }
+
+        /* Room Background Maps (SVG drawings optimized for direct 2D backdrop alignment) */
+        .room-town {
+            background: radial-gradient(circle at 50% 30%, #a2e0fc 0%, #1e90ff 100%);
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 600" preserveAspectRatio="none"><rect width="1000" height="600" fill="%23a2e0fc"/><ellipse cx="500" cy="400" rx="480" ry="160" fill="%23E0F7FA" stroke="%23B2EBF2" stroke-width="8"/><rect x="150" y="200" width="220" height="180" fill="%23FFB74D" stroke="%23002244" stroke-width="6" rx="10"/><polygon points="120,200 260,110 400,200" fill="%23D84315" stroke="%23002244" stroke-width="6"/><rect x="630" y="180" width="240" height="200" fill="%234FC3F7" stroke="%23002244" stroke-width="6" rx="10"/><polygon points="600,180 750,90 900,180" fill="%2301579B" stroke="%23002244" stroke-width="6"/><circle cx="260" cy="285" r="45" fill="%23FFF" stroke="%23002244" stroke-width="4"/><text x="260" y="292" font-family="Arial" font-weight="900" text-anchor="middle" fill="%23333" font-size="16">COFFEE</text><rect x="690" y="250" width="120" height="50" fill="%23FFD54F" stroke="%23002244" stroke-width="4" rx="5"/><text x="750" y="282" font-family="Arial" font-weight="900" text-anchor="middle" fill="%23000" font-size="14">DANCE CLUB</text></svg>');
+            background-size: 100% 100%;
+        }
+        .room-plaza {
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 600" preserveAspectRatio="none"><rect width="1000" height="600" fill="%234FC3F7"/><ellipse cx="500" cy="420" rx="490" ry="140" fill="%23FFFFFF" stroke="%23E0F7FA" stroke-width="8"/><rect x="120" y="220" width="210" height="150" fill="%23AED581" stroke="%23002244" stroke-width="6" rx="8"/><rect x="400" y="190" width="200" height="180" fill="%23BA68C8" stroke="%23002244" stroke-width="6" rx="8"/><rect x="680" y="220" width="210" height="150" fill="%23FF8A65" stroke="%23002244" stroke-width="6" rx="8"/><text x="225" y="300" font-family="Arial" font-weight="900" text-anchor="middle" fill="white" font-size="20" stroke="%23002244" stroke-width="4">PET SHOP</text><text x="500" y="280" font-family="Arial" font-weight="900" text-anchor="middle" fill="white" font-size="20" stroke="%23002244" stroke-width="4">STAGE</text><text x="785" y="300" font-family="Arial" font-weight="900" text-anchor="middle" fill="white" font-size="20" stroke="%23002244" stroke-width="4">PIZZA</text></svg>');
+            background-size: 100% 100%;
+        }
+        .room-iceberg {
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 600" preserveAspectRatio="none"><rect width="1000" height="600" fill="%2301579B"/><ellipse cx="500" cy="380" rx="390" ry="160" fill="%23FFFFFF" stroke="%23E0F7FA" stroke-width="10"/><path d="M 150,380 Q 500,500 850,380 Q 500,540 150,380 Z" fill="%23B2EBF2" opacity="0.6"/></svg>');
+            background-size: 100% 100%;
+        }
+        .room-forest {
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 600" preserveAspectRatio="none"><rect width="1000" height="600" fill="%23004d40"/><ellipse cx="500" cy="410" rx="460" ry="150" fill="%23ffffff" stroke="%23c8e6c9" stroke-width="8"/><polygon points="100,300 150,150 200,300" fill="%232e7d32"/><polygon points="200,340 260,180 320,340" fill="%231b5e20"/><polygon points="800,300 850,150 900,300" fill="%232e7d32"/><circle cx="500" cy="200" r="15" fill="%23fff" opacity="0.8"/></svg>');
+            background-size: 100% 100%;
         }
 
         #canvas-container {
-            width: 100vw;
-            height: 100vh;
-            display: block;
-            position: absolute;
-            top: 0; left: 0;
-            z-index: 1;
+            width: 100vw; height: 100vh;
+            display: block; position: absolute; top: 0; left: 0; z-index: 1;
         }
-        
-        #overlays-container {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            pointer-events: none;
-            z-index: 5;
+        #bubbles-container {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5;
         }
 
-        #ui-container {
+        /* --- THE AUTHENTIC 2008 SNOWBALL TARGET CURSOR --- */
+        .snowball-active {
+            cursor: crosshair !important;
+        }
+
+        /* Custom scrollbar matching retro cartoon UI */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #002244;
+            border-radius: 5px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #FFD54F;
+            border: 2px solid #002244;
+            border-radius: 5px;
+        }
+
+        /* --- STUNNING 2008 LOGIN PANEL --- */
+        #login-screen {
             position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, rgba(220, 240, 255, 0.95) 100%);
-            padding: 12px;
-            border-radius: 15px;
-            box-shadow: 0 8px 15px rgba(0,0,0,0.3);
-            width: 500px;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: radial-gradient(circle, #0088ff 20%, #002266 100%);
+            z-index: 1000;
             display: flex;
             flex-direction: column;
-            gap: 10px;
-            border: 4px solid #003366;
-            z-index: 20;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Quicksand', sans-serif;
+            transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
-        .double-stroke-text {
-            color: #FFFFFF;
-            font-size: 28px;
-            font-weight: 900;
-            letter-spacing: 1px;
-            margin: 0;
-            text-align: center;
-            text-transform: uppercase;
-            text-shadow: 
-                -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000,
-                -4px -4px 0 #0056b3, 4px -4px 0 #0056b3, -4px 4px 0 #0056b3, 4px 4px 0 #0056b3,
-                0px 4px 0px rgba(0,0,0,0.2);
+        /* Premium Border Stroke style buttons */
+        .btn-cp-yellow {
+            background: linear-gradient(180deg, #FFF176 0%, #FBC02D 100%);
+            border: 4px solid #002244;
+            box-shadow: 0 6px 0 #002244, inset 0 2px 0 rgba(255,255,255,0.5);
+            color: #002244;
+            font-family: 'Fredoka One', cursive;
+            transition: transform 0.05s, box-shadow 0.05s;
+        }
+        .btn-cp-yellow:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 #002244;
         }
 
-        #chat-log {
-            height: 100px;
-            overflow-y: auto;
-            border: 3px solid #003366;
-            padding: 8px;
-            background: #fff;
-            font-size: 14px;
-            font-weight: bold;
-            border-radius: 8px;
-        }
-        
-        .chat-input-row {
-            display: flex;
-            gap: 6px;
-        }
-        
-        input {
-            padding: 8px;
-            border: 3px solid #003366;
-            border-radius: 8px;
-            font-family: Arial, sans-serif;
-            font-weight: bold;
-            font-size: 15px;
-            outline: none;
-        }
-        
-        #username-input { width: 80px; }
-        #message-input { flex-grow: 1; }
-        
-        button {
-            padding: 8px 14px;
-            background: linear-gradient(180deg, #00BFFF 0%, #0056b3 100%);
+        .btn-cp-blue {
+            background: linear-gradient(180deg, #4FC3F7 0%, #0288D1 100%);
+            border: 4px solid #002244;
+            box-shadow: 0 6px 0 #002244, inset 0 2px 0 rgba(255,255,255,0.5);
             color: white;
-            border: 3px solid #003366;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 900;
-            font-size: 15px;
-            -webkit-text-stroke: 0.5px black;
-            box-shadow: 0 3px 0 #003366;
+            font-family: 'Fredoka One', cursive;
+            transition: transform 0.05s, box-shadow 0.05s;
         }
-        button:active {
-            transform: translateY(3px);
-            box-shadow: 0 0 0 #003366;
+        .btn-cp-blue:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 #002244;
         }
 
-        #emote-btn { background: linear-gradient(180deg, #FFD54F 0%, #FF8F00 100%); }
-        #map-btn { background: linear-gradient(180deg, #a8ff78 0%, #78ffd6 100%); color: #003366; -webkit-text-stroke: 0px; }
-
-        #emote-drawer {
-            display: none;
+        /* Taskbar layout */
+        .cp-taskbar {
             position: absolute;
-            bottom: 185px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: white;
-            border: 4px solid #003366;
-            border-radius: 12px;
-            padding: 8px;
-            gap: 8px;
-            z-index: 30;
-            box-shadow: 0 6px 12px rgba(0,0,0,0.3);
-        }
-        .emote-option {
-            font-size: 24px;
-            cursor: pointer;
-            padding: 4px;
-            transition: transform 0.1s;
-        }
-        .emote-option:hover { transform: scale(1.3); }
-
-        #map-modal {
-            display: none;
-            position: fixed;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            width: 400px;
-            background: #E0F7FA;
-            border: 5px solid #003366;
-            border-radius: 20px;
-            padding: 20px;
+            bottom: 0; left: 0; width: 100%; height: 75px;
+            background: linear-gradient(180deg, #00B0FF 0%, #005cbf 100%);
+            border-top: 5px solid #002244;
+            box-shadow: 0 -4px 10px rgba(0,0,0,0.3);
             z-index: 100;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-            text-align: center;
         }
-        .map-regions {
-            display: flex;
-            justify-content: space-around;
-            margin-top: 20px;
-            gap: 15px;
-        }
-        .map-card {
-            background: white;
-            border: 3px solid #003366;
-            border-radius: 12px;
-            padding: 15px;
-            cursor: pointer;
-            flex: 1;
-            font-weight: bold;
-            box-shadow: 0 4px 0 #003366;
-        }
-        .map-card:hover { background: #B2EBF2; }
 
-        .player-name {
-            position: absolute;
-            transform: translate(-50%, -100%);
-            color: #001f3f;
-            background: rgba(255, 255, 255, 0.75);
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: bold;
-            border: 1.5px solid #003366;
-            white-space: nowrap;
-            z-index: 6;
-        }
-        
+        /* Authentic CP Dialog Speech Bubbles */
         .speech-bubble {
             position: absolute;
-            background: white;
-            border: 2.5px solid black;
+            background: #ffffff;
+            border: 3px solid #000;
             border-radius: 12px;
-            padding: 6px 12px;
+            padding: 8px 14px;
+            font-family: Arial, sans-serif;
             font-weight: bold;
             font-size: 14px;
-            transform: translate(-50%, -140%);
+            color: #000;
+            pointer-events: none;
+            transform: translate(-50%, -100%);
             white-space: nowrap;
-            z-index: 10;
+            box-shadow: 4px 4px 0px rgba(0,0,0,0.15);
+            z-index: 20;
         }
         .speech-bubble::after {
-            content: ''; position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%);
-            border-width: 10px 10px 0; border-style: solid; border-color: black transparent transparent;
+            content: '';
+            position: absolute;
+            bottom: -11px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 11px 11px 0;
+            border-style: solid;
+            border-color: #000 transparent transparent transparent;
+            display: block;
+            width: 0;
+        }
+        .speech-bubble::before {
+            content: '';
+            position: absolute;
+            bottom: -7px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 8px 8px 0;
+            border-style: solid;
+            border-color: #ffffff transparent transparent transparent;
+            display: block;
+            width: 0;
+            z-index: 21;
         }
 
-        .floating-emote {
-            position: absolute;
-            font-size: 36px;
-            transform: translate(-50%, -150%);
-            animation: bounceUp 1.5s ease-out forwards;
-            z-index: 12;
+        /* Double border styling matching old Flash windows */
+        .cp-popup-window {
+            background: #0288D1;
+            border: 5px solid #002244;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+            font-family: 'Quicksand', sans-serif;
+            z-index: 150;
         }
-        @keyframes bounceUp {
-            0% { transform: translate(-50%, -100%) scale(0.5); opacity: 0; }
-            15% { transform: translate(-50%, -160%) scale(1.2); opacity: 1; }
-            30% { transform: translate(-50%, -150%) scale(1.0); }
-            80% { opacity: 1; }
-            100% { transform: translate(-50%, -200%) scale(0.8); opacity: 0; }
+
+        .cp-inner-card {
+            background: #FFFDE7;
+            border: 4px solid #002244;
+            border-radius: 12px;
+        }
+
+        /* 2D snowball impact splat overlay */
+        .snow-splat {
+            position: absolute;
+            width: 35px; height: 35px;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M50,15 C45,35 25,25 35,45 C15,45 20,65 40,60 C40,80 60,85 60,65 C80,75 85,55 65,45 C85,35 70,15 50,15 Z" fill="white" opacity="0.95"/></svg>');
+            background-size: cover;
+            pointer-events: none;
+            z-index: 6;
+            animation: splatFade 4s ease-out forwards;
+            transform: translate(-50%, -50%);
+        }
+        @keyframes splatFade {
+            0% { transform: translate(-50%, -50%) scale(0.2); opacity: 1; }
+            5% { transform: translate(-50%, -50%) scale(1.1); }
+            10% { transform: translate(-50%, -50%) scale(1.0); }
+            80% { opacity: 0.9; }
+            100% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
         }
     </style>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 </head>
-<body>
+<body class="room-town">
 
+    <!-- CANVAS ENGINE BACKGROUND -->
     <div id="canvas-container"></div>
-    <div id="overlays-container"></div>
+    <div id="bubbles-container"></div>
 
-    <div id="emote-drawer">
-        <span class="emote-option">🐧</span>
-        <span class="emote-option">❤️</span>
-        <span class="emote-option">😂</span>
-        <span class="emote-option">👍</span>
-        <span class="emote-option">❄️</span>
-        <span class="emote-option">❗</span>
+    <!-- --- STREAMING_CHUNK:Structuring the login and server selection screens... -->
+    <!-- AUTHENTIC LOGIN & SERVER INTERFACE -->
+    <div id="login-screen">
+        <!-- Floating Penguins Art & Logo Header -->
+        <div class="text-center mb-6">
+            <div class="inline-block bg-white p-3 rounded-full border-4 border-[#002244] mb-3 shadow-lg">
+                <svg width="80" height="80" viewBox="0 0 100 100" class="mx-auto">
+                    <!-- Retro Yellow/Orange Mascot drawing -->
+                    <circle cx="50" cy="50" r="45" fill="#00B0FF" stroke="#002244" stroke-width="4"/>
+                    <ellipse cx="50" cy="55" rx="30" ry="35" fill="#002244"/>
+                    <ellipse cx="50" cy="55" rx="22" ry="28" fill="#1565C0"/>
+                    <ellipse cx="50" cy="58" rx="15" ry="20" fill="white"/>
+                    <ellipse cx="40" cy="30" rx="8" ry="12" fill="white"/>
+                    <ellipse cx="60" cy="30" rx="8" ry="12" fill="white"/>
+                    <circle cx="40" cy="32" r="3" fill="black"/>
+                    <circle cx="60" cy="32" r="3" fill="black"/>
+                    <polygon points="50,38 35,48 50,44 65,48" fill="#FF8F00" stroke="#002244" stroke-width="2"/>
+                </svg>
+            </div>
+            <h1 class="text-4xl text-white font-cp drop-shadow-[0_4px_0_#002244] uppercase tracking-wider">Club Penguin 2008</h1>
+            <p class="text-yellow-300 font-bold text-lg mt-1 tracking-widest uppercase">Multiplayer Sandbox v2.6</p>
+        </div>
+
+        <!-- Login Credentials Form -->
+        <div id="login-form-panel" class="bg-[#FFFDE7] border-4 border-[#002244] rounded-2xl p-6 w-[340px] shadow-[0_10px_0_#002244] text-[#002244]">
+            <h2 class="text-xl font-cp text-center mb-4 border-b-2 border-[#002244] pb-2">Log In</h2>
+            
+            <div class="mb-4">
+                <label class="block text-xs font-bold uppercase mb-1">Penguin Name</label>
+                <input type="text" id="login-username" value="Penguin" maxlength="10" 
+                    class="w-full p-2 border-3 border-[#002244] rounded-lg font-bold bg-white outline-none focus:ring-2 focus:ring-[#00B0FF]">
+            </div>
+            
+            <div class="mb-6">
+                <label class="block text-xs font-bold uppercase mb-1">Select Penguin Color</label>
+                <div class="grid grid-cols-5 gap-2">
+                    <div class="color-picker-opt w-10 h-10 rounded-lg cursor-pointer border-3 border-[#002244]" style="background-color: #0288D1;" onclick="selectColor(0, '#0288D1')"></div>
+                    <div class="color-picker-opt w-10 h-10 rounded-lg cursor-pointer border-3 border-[#002244] opacity-50" style="background-color: #388E3C;" onclick="selectColor(1, '#388E3C')"></div>
+                    <div class="color-picker-opt w-10 h-10 rounded-lg cursor-pointer border-3 border-[#002244] opacity-50" style="background-color: #D32F2F;" onclick="selectColor(2, '#D32F2F')"></div>
+                    <div class="color-picker-opt w-10 h-10 rounded-lg cursor-pointer border-3 border-[#002244] opacity-50" style="background-color: #F57C00;" onclick="selectColor(3, '#F57C00')"></div>
+                    <div class="color-picker-opt w-10 h-10 rounded-lg cursor-pointer border-3 border-[#002244] opacity-50" style="background-color: #7B1FA2;" onclick="selectColor(4, '#7B1FA2')"></div>
+                </div>
+            </div>
+
+            <button onclick="goToServers()" class="w-full py-3 text-lg btn-cp-yellow">
+                LOG IN
+            </button>
+        </div>
+
+        <!-- Server Selector Screen (Hidden initially) -->
+        <div id="server-selector-panel" class="hidden bg-[#FFFDE7] border-4 border-[#002244] rounded-2xl p-6 w-[380px] shadow-[0_10px_0_#002244] text-[#002244]">
+            <h2 class="text-xl font-cp text-center mb-4 border-b-2 border-[#002244] pb-2">Select Server</h2>
+            
+            <div class="space-y-3 mb-6 max-h-[220px] overflow-y-auto pr-1">
+                <!-- Blizzard Server Row -->
+                <div onclick="enterServer('Blizzard')" class="flex items-center justify-between p-3 border-3 border-[#002244] bg-white rounded-xl hover:bg-yellow-50 cursor-pointer transition">
+                    <span class="font-bold flex items-center gap-2"><span class="text-xl">🏔️</span> Blizzard</span>
+                    <div class="flex gap-1" title="High Population">
+                        <span class="w-2 h-4 bg-green-500 rounded-sm"></span>
+                        <span class="w-2 h-4 bg-green-500 rounded-sm"></span>
+                        <span class="w-2 h-4 bg-green-500 rounded-sm"></span>
+                        <span class="w-2 h-4 bg-green-500 rounded-sm"></span>
+                        <span class="w-2 h-4 bg-gray-300 rounded-sm"></span>
+                    </div>
+                </div>
+                <!-- Frozen Server Row -->
+                <div onclick="enterServer('Frozen')" class="flex items-center justify-between p-3 border-3 border-[#002244] bg-white rounded-xl hover:bg-yellow-50 cursor-pointer transition">
+                    <span class="font-bold flex items-center gap-2"><span class="text-xl">❄️</span> Frozen</span>
+                    <div class="flex gap-1" title="Medium Population">
+                        <span class="w-2 h-4 bg-green-500 rounded-sm"></span>
+                        <span class="w-2 h-4 bg-green-500 rounded-sm"></span>
+                        <span class="w-2 h-4 bg-gray-300 rounded-sm"></span>
+                        <span class="w-2 h-4 bg-gray-300 rounded-sm"></span>
+                        <span class="w-2 h-4 bg-gray-300 rounded-sm"></span>
+                    </div>
+                </div>
+                <!-- Mammoth Server Row -->
+                <div onclick="enterServer('Mammoth')" class="flex items-center justify-between p-3 border-3 border-[#002244] bg-white rounded-xl hover:bg-yellow-50 cursor-pointer transition">
+                    <span class="font-bold flex items-center gap-2"><span class="text-xl">🐘</span> Mammoth</span>
+                    <div class="flex gap-1" title="Full population">
+                        <span class="w-2 h-4 bg-red-500 rounded-sm"></span>
+                        <span class="w-2 h-4 bg-red-500 rounded-sm"></span>
+                        <span class="w-2 h-4 bg-red-500 rounded-sm"></span>
+                        <span class="w-2 h-4 bg-red-500 rounded-sm"></span>
+                        <span class="w-2 h-4 bg-red-500 rounded-sm"></span>
+                    </div>
+                </div>
+            </div>
+
+            <button onclick="backToLogin()" class="w-full py-2 btn-cp-blue">
+                ← BACK
+            </button>
+        </div>
     </div>
 
-    <div id="map-modal">
-        <h3 class="double-stroke-text">Island Map</h3>
-        <div class="map-regions">
-            <div class="map-card" onclick="teleportToRegion(0, 0)">
-                <div style="font-size:32px">🏙️</div>
-                <div>Town Center</div>
+
+    <!-- --- STREAMING_CHUNK:Designing the main game container, interactive taskbars, and popups... -->
+    <!-- --- INTERACTIVE GAME POPUP PANELS --- -->
+    
+    <!-- 1. AUTHENTIC PLAYER CARD WINDOW -->
+    <div id="player-card" class="cp-popup-window absolute left-[10%] top-[15%] w-[330px] p-4 hidden flex-col">
+        <div class="flex justify-between items-center mb-3">
+            <span class="text-white font-cp text-lg uppercase drop-shadow-[0_2px_0_#000]">Player Card</span>
+            <button onclick="closePlayerCard()" class="w-8 h-8 rounded-full bg-red-500 border-2 border-[#002244] text-white font-bold flex items-center justify-center hover:bg-red-600">X</button>
+        </div>
+        
+        <div class="cp-inner-card p-3 flex flex-col items-center">
+            <!-- Equipped Items Slots (Visual indicators) -->
+            <div class="flex justify-between w-full mb-3 text-xs text-[#002244] font-bold">
+                <span id="player-card-username" class="text-sm font-cp">Penguin Name</span>
+                <span class="bg-yellow-300 px-2 py-0.5 rounded-full border-2 border-[#002244] flex items-center gap-1">🪙 <span id="player-card-coins">500</span></span>
             </div>
-            <div class="map-card" onclick="teleportToRegion(45, -45)">
-                <div style="font-size:32px">🏡</div>
-                <div>Igloo Suburbs</div>
+
+            <!-- Virtual Model Avatar Spot -->
+            <div class="w-full h-[220px] bg-sky-200 border-3 border-[#002244] rounded-lg relative overflow-hidden flex items-center justify-center">
+                <!-- SVG Avatar Drawing representing customization live -->
+                <svg id="card-avatar-svg" width="160" height="160" viewBox="0 0 100 100">
+                    <!-- Base color background ellipse -->
+                    <ellipse cx="50" cy="55" rx="26" ry="32" id="avatar-body" fill="#0288D1" stroke="#002244" stroke-width="3"/>
+                    <ellipse cx="50" cy="58" rx="18" ry="24" fill="white" stroke="#002244" stroke-width="2"/>
+                    <!-- Procedural items rendered depending on inventory status -->
+                    <g id="avatar-item-eyes">
+                        <ellipse cx="42" cy="35" rx="6" ry="10" fill="white"/>
+                        <ellipse cx="58" cy="35" rx="6" ry="10" fill="white"/>
+                        <circle cx="42" cy="37" r="2.5" fill="black"/>
+                        <circle cx="58" cy="37" r="2.5" fill="black"/>
+                    </g>
+                    <!-- Beak -->
+                    <polygon points="50,43 40,50 50,47 60,50" fill="#FF8F00" stroke="#002244" stroke-width="2"/>
+                    <!-- Dynamically injected SVGs for items bought -->
+                    <g id="avatar-equipped-items"></g>
+                </svg>
+            </div>
+
+            <!-- Card Actions -->
+            <div class="grid grid-cols-2 gap-2 w-full mt-3">
+                <button onclick="openCatalog()" class="py-2 text-xs font-bold bg-[#FFD54F] border-2 border-[#002244] rounded-lg shadow-[0_2px_0_#002244] text-[#002244] active:translate-y-0.5 active:shadow-none hover:bg-yellow-400">🎁 OPEN CATALOG</button>
+                <button onclick="clearAllOutfits()" class="py-2 text-xs font-bold bg-[#81C784] border-2 border-[#002244] rounded-lg shadow-[0_2px_0_#002244] text-[#002244] active:translate-y-0.5 active:shadow-none hover:bg-green-400">🗑️ STRIP OUTFIT</button>
             </div>
         </div>
-        <button style="margin-top: 20px; background: #ff5252;" onclick="toggleMap(false)">Close</button>
     </div>
 
-    <div id="ui-container">
-        <h3 class="double-stroke-text">Plaza</h3>
-        <div id="chat-log"></div>
-        <div class="chat-input-row">
-            <input type="text" id="username-input" placeholder="Name" value="Penguin" maxlength="10">
-            <input type="text" id="message-input" placeholder="Type a message..." maxlength="50">
-            <button id="send-btn">Send</button>
-            <button id="emote-btn">Happy</button>
-            <button id="map-btn">Map</button>
+    <!-- 2. INVENTORY GIFT SHOP CATALOG WINDOW -->
+    <div id="catalog-window" class="cp-popup-window absolute left-[15%] top-[10%] w-[480px] p-4 hidden flex-col">
+        <div class="flex justify-between items-center mb-3">
+            <span class="text-white font-cp text-lg uppercase drop-shadow-[0_2px_0_#000]">Gift Shop Clothing Catalog</span>
+            <button onclick="closeCatalog()" class="w-8 h-8 rounded-full bg-red-500 border-2 border-[#002244] text-white font-bold flex items-center justify-center hover:bg-red-600">X</button>
+        </div>
+        
+        <div class="cp-inner-card p-4 flex flex-col max-h-[400px] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4 border-b-2 border-[#002244] pb-2">
+                <span class="font-bold text-[#002244]">Available Items:</span>
+                <span class="bg-yellow-300 font-bold px-3 py-1 rounded-full border-2 border-[#002244] text-xs text-[#002244]">Your Coins: 🪙 <span id="catalog-wallet">500</span></span>
+            </div>
+
+            <!-- Catalog Items Grid -->
+            <div class="grid grid-cols-2 gap-4">
+                <!-- Propeller Hat Card -->
+                <div class="border-2 border-[#002244] bg-white rounded-xl p-3 flex flex-col items-center">
+                    <span class="text-2xl">🚁</span>
+                    <span class="font-bold text-[#002244] text-sm mt-1">Propeller Hat</span>
+                    <span class="text-xs text-gray-500 mb-2">Cost: 🪙 100</span>
+                    <button id="buy-btn-hat" onclick="buyItem('hat', 100)" class="w-full py-1 text-xs btn-cp-yellow">BUY</button>
+                </div>
+                <!-- Black Hoodie Card -->
+                <div class="border-2 border-[#002244] bg-white rounded-xl p-3 flex flex-col items-center">
+                    <span class="text-2xl">🧥</span>
+                    <span class="font-bold text-[#002244] text-sm mt-1">Black Hoodie</span>
+                    <span class="text-xs text-gray-500 mb-2">Cost: 🪙 180</span>
+                    <button id="buy-btn-hoodie" onclick="buyItem('hoodie', 180)" class="w-full py-1 text-xs btn-cp-yellow">BUY</button>
+                </div>
+                <!-- Sunglasses Card -->
+                <div class="border-2 border-[#002244] bg-white rounded-xl p-3 flex flex-col items-center">
+                    <span class="text-2xl">🕶️</span>
+                    <span class="font-bold text-[#002244] text-sm mt-1">Cool Glasses</span>
+                    <span class="text-xs text-gray-500 mb-2">Cost: 🪙 80</span>
+                    <button id="buy-btn-glasses" onclick="buyItem('glasses', 8) " class="w-full py-1 text-xs btn-cp-yellow">BUY</button>
+                </div>
+                <!-- Red Cape Card -->
+                <div class="border-2 border-[#002244] bg-white rounded-xl p-3 flex flex-col items-center">
+                    <span class="text-2xl">🧣</span>
+                    <span class="font-bold text-[#002244] text-sm mt-1">Heroic Red Cape</span>
+                    <span class="text-xs text-gray-500 mb-2">Cost: 🪙 150</span>
+                    <button id="buy-btn-cape" onclick="buyItem('cape', 150)" class="w-full py-1 text-xs btn-cp-yellow">BUY</button>
+                </div>
+            </div>
         </div>
     </div>
+
+    <!-- 3. PUFFLE ADOPTION CENTER -->
+    <div id="puffle-window" class="cp-popup-window absolute left-[20%] top-[15%] w-[320px] p-4 hidden flex-col">
+        <div class="flex justify-between items-center mb-3">
+            <span class="text-white font-cp text-lg uppercase drop-shadow-[0_2px_0_#000]">Adopt a Puffle</span>
+            <button onclick="closePuffleWindow()" class="w-8 h-8 rounded-full bg-red-500 border-2 border-[#002244] text-white font-bold flex items-center justify-center hover:bg-red-600">X</button>
+        </div>
+        
+        <div class="cp-inner-card p-4 flex flex-col">
+            <div class="text-center text-xs text-gray-600 font-bold mb-4">Select your Puffle companion:</div>
+            
+            <div class="grid grid-cols-2 gap-3 mb-4">
+                <button onclick="adoptPuffle('Red', 0xD32F2F)" class="p-3 border-2 border-[#002244] bg-[#FFCDD2] hover:bg-red-200 rounded-xl flex flex-col items-center font-bold">
+                    <span class="text-2xl">🔴</span>
+                    <span>Red Puffle</span>
+                </button>
+                <button onclick="adoptPuffle('Blue', 0x1976D2)" class="p-3 border-2 border-[#002244] bg-[#BBDEFB] hover:bg-blue-200 rounded-xl flex flex-col items-center font-bold">
+                    <span class="text-2xl">🔵</span>
+                    <span>Blue Puffle</span>
+                </button>
+                <button onclick="adoptPuffle('Pink', 0xE91E63)" class="p-3 border-2 border-[#002244] bg-[#F8BBD0] hover:bg-pink-200 rounded-xl flex flex-col items-center font-bold">
+                    <span class="text-2xl">🌸</span>
+                    <span>Pink Puffle</span>
+                </button>
+                <button onclick="adoptPuffle('Black', 0x212121)" class="p-3 border-2 border-[#002244] bg-[#CFD8DC] hover:bg-gray-300 rounded-xl flex flex-col items-center font-bold">
+                    <span class="text-2xl">⚫</span>
+                    <span>Black Puffle</span>
+                </button>
+            </div>
+            
+            <button onclick="removePuffle()" class="py-2 text-xs font-bold bg-[#EF5350] border-2 border-[#002244] text-white rounded-lg">DISMISS PUFFLE</button>
+        </div>
+    </div>
+
+
+    <!-- 4. FLOATING LOGIC SCROLLING CHAT (Transparent, aligned nicely) -->
+    <div id="chat-log" class="absolute bottom-[90px] left-6 w-[450px] h-[180px] overflow-y-auto pointer-events-auto z-10 flex flex-col justify-end space-y-1"></div>
+
+
+    <!-- --- MENU OVERLAYS --- -->
+    <!-- Emotes Popup -->
+    <div id="popup-emotes" class="absolute bottom-[85px] right-[240px] cp-popup-window p-3 hidden flex-col w-[200px]">
+        <span class="text-center text-white font-cp text-xs mb-2">Emotes</span>
+        <div class="grid grid-cols-4 gap-2">
+            <button onclick="sendEmote('😀')" class="p-1 bg-white border-2 border-[#002244] rounded hover:bg-yellow-50 text-xl">😀</button>
+            <button onclick="sendEmote('💚')" class="p-1 bg-white border-2 border-[#002244] rounded hover:bg-yellow-50 text-xl">💚</button>
+            <button onclick="sendEmote('😭')" class="p-1 bg-white border-2 border-[#002244] rounded hover:bg-yellow-50 text-xl">😭</button>
+            <button onclick="sendEmote('😡')" class="p-1 bg-white border-2 border-[#002244] rounded hover:bg-yellow-50 text-xl">😡</button>
+            <button onclick="sendEmote('😮')" class="p-1 bg-white border-2 border-[#002244] rounded hover:bg-yellow-50 text-xl">😮</button>
+            <button onclick="sendEmote('👍')" class="p-1 bg-white border-2 border-[#002244] rounded hover:bg-yellow-50 text-xl">👍</button>
+            <button onclick="sendEmote('👎')" class="p-1 bg-white border-2 border-[#002244] rounded hover:bg-yellow-50 text-xl">👎</button>
+            <button onclick="sendEmote('👻')" class="p-1 bg-white border-2 border-[#002244] rounded hover:bg-yellow-50 text-xl">👻</button>
+        </div>
+    </div>
+
+    <!-- Actions Popup -->
+    <div id="popup-actions" class="absolute bottom-[85px] right-[180px] cp-popup-window p-3 hidden flex-col w-[150px]">
+        <span class="text-center text-white font-cp text-xs mb-2">Actions</span>
+        <div class="flex flex-col gap-1.5">
+            <button onclick="setPlayerAction('idle')" class="py-1.5 px-3 bg-white border-2 border-[#002244] rounded font-bold text-xs hover:bg-yellow-50 text-left">🧍 Stand</button>
+            <button onclick="setPlayerAction('sit')" class="py-1.5 px-3 bg-white border-2 border-[#002244] rounded font-bold text-xs hover:bg-yellow-50 text-left">🧎 Sit Down</button>
+            <button onclick="setPlayerAction('wave')" class="py-1.5 px-3 bg-white border-2 border-[#002244] rounded font-bold text-xs hover:bg-yellow-50 text-left">👋 Wave</button>
+            <button onclick="setPlayerAction('dance')" class="py-1.5 px-3 bg-white border-2 border-[#002244] rounded font-bold text-xs hover:bg-yellow-50 text-left">🕺 Dance</button>
+        </div>
+    </div>
+
+    <!-- Map/Places Navigation Menu -->
+    <div id="popup-map" class="absolute bottom-[85px] right-[20px] cp-popup-window p-3 hidden flex-col w-[260px]">
+        <span class="text-center text-white font-cp text-xs mb-3">Map Places</span>
+        <!-- Decorative Vector Map Drawing -->
+        <div class="w-full h-[120px] bg-sky-200 border-2 border-[#002244] rounded-lg mb-3 relative overflow-hidden flex items-center justify-center">
+            <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
+                <rect width="100" height="100" fill="#a2e0fc"/>
+                <!-- Map Island outline shape -->
+                <ellipse cx="50" cy="55" rx="40" ry="25" fill="#FFF" stroke="#005cbf" stroke-width="2"/>
+                <circle cx="35" cy="55" r="3" fill="#E53935"/>
+                <circle cx="50" cy="45" r="3" fill="#FFB300"/>
+                <circle cx="65" cy="55" r="3" fill="#43A047"/>
+                <circle cx="50" cy="70" r="3" fill="#D81B60"/>
+            </svg>
+            <div class="absolute inset-0 flex flex-col justify-between p-1.5 text-[10px] font-bold text-blue-900 pointer-events-none">
+                <div class="text-center">Mountain Tops</div>
+                <div class="flex justify-between px-2">
+                    <span>Forest</span>
+                    <span>Plaza</span>
+                </div>
+                <div class="text-center">Iceberg</div>
+            </div>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+            <button onclick="switchRoom('town')" class="py-2 bg-white border-2 border-[#002244] rounded-lg font-bold text-xs text-center hover:bg-yellow-50">Town</button>
+            <button onclick="switchRoom('plaza')" class="py-2 bg-white border-2 border-[#002244] rounded-lg font-bold text-xs text-center hover:bg-yellow-50">Plaza</button>
+            <button onclick="switchRoom('iceberg')" class="py-2 bg-white border-2 border-[#002244] rounded-lg font-bold text-xs text-center hover:bg-yellow-50">Iceberg</button>
+            <button onclick="switchRoom('forest')" class="py-2 bg-white border-2 border-[#002244] rounded-lg font-bold text-xs text-center hover:bg-yellow-50">Forest</button>
+        </div>
+    </div>
+
+
+    <!-- --- THE AUTHENTIC 2008 ACTION & CHAT TASKBAR --- -->
+    <div class="cp-taskbar flex items-center justify-between px-6" id="taskbar-ui">
+        <!-- Left Side: Chat input & Action Launcher -->
+        <div class="flex items-center gap-3">
+            <!-- Blue Mod Status Badge star -->
+            <button onclick="openPlayerCard()" class="w-12 h-12 rounded-full border-3 border-[#002244] bg-gradient-to-b from-yellow-300 to-amber-500 shadow-[0_3px_0_#002244] font-cp text-white text-lg flex items-center justify-center hover:scale-105 active:translate-y-0.5">⭐</button>
+            
+            <!-- Styled Chat Input Bar -->
+            <div class="flex items-center bg-white border-4 border-[#002244] rounded-full px-4 py-1.5 w-[280px]">
+                <input type="text" id="message-input" placeholder="Type to talk here..." maxlength="60" 
+                    class="border-none outline-none w-full font-bold text-md text-[#002244]">
+            </div>
+            
+            <!-- Send Button -->
+            <button id="send-btn" class="py-2 px-5 btn-cp-yellow text-xs">GO</button>
+        </div>
+
+        <!-- Center: Quick Interaction Mode Buttons -->
+        <div class="flex items-center gap-2">
+            <!-- Snowball Throw Toggle Trigger -->
+            <button id="snowball-toggle" onclick="toggleSnowballMode()" title="Snowball Mode"
+                class="w-12 h-12 rounded-full border-3 border-[#002244] bg-gradient-to-b from-blue-100 to-blue-400 shadow-[0_3px_0_#002244] flex items-center justify-center hover:scale-105 active:translate-y-0.5 text-2xl">
+                ❄️
+            </button>
+        </div>
+
+        <!-- Right Side: Navigation & Popups launcher -->
+        <div class="flex items-center gap-2">
+            <button onclick="togglePopup('popup-emotes')" class="w-12 h-12 rounded-full border-3 border-[#002244] bg-gradient-to-b from-[#FFF7C2] to-[#FFD54F] shadow-[0_3px_0_#002244] flex items-center justify-center hover:scale-105 active:translate-y-0.5 text-2xl">💬</button>
+            <button onclick="togglePopup('popup-actions')" class="w-12 h-12 rounded-full border-3 border-[#002244] bg-gradient-to-b from-[#FFF7C2] to-[#FFD54F] shadow-[0_3px_0_#002244] flex items-center justify-center hover:scale-105 active:translate-y-0.5 text-2xl">🏃</button>
+            <button onclick="togglePopup('puffle-window')" class="w-12 h-12 rounded-full border-3 border-[#002244] bg-gradient-to-b from-pink-100 to-pink-400 shadow-[0_3px_0_#002244] flex items-center justify-center hover:scale-105 active:translate-y-0.5 text-2xl" title="Adopt Puffle">🐾</button>
+            <button onclick="togglePopup('popup-map')" class="w-12 h-12 rounded-full border-3 border-[#002244] bg-gradient-to-b from-[#FF8A65] to-[#D84315] shadow-[0_3px_0_#002244] flex items-center justify-center hover:scale-105 active:translate-y-0.5 text-2xl">🗺️</button>
+        </div>
+    </div>
+
 
     <script>
-        // Connect directly to your external backend web server
-        const socket = io('https://cpworld.onrender.com/');
-        
+        // --- STREAMING_CHUNK:Initializing state management and Web Audio synthesizer... ---
+        // Basic Socket sync setup
+        const socket = io();
         const otherPlayers = {}; 
-        const overlays = {}; 
-        const activeEmotes = [];
+        const speechBubbles = {}; 
 
+        // Sound System Web Audio Oscillator Synth 
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) audioCtx = new AudioContext();
+        }
+
+        function playSynthSound(freq, type, duration, slideTo = null) {
+            try {
+                initAudio();
+                const osc = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                if (slideTo) {
+                    osc.frequency.exponentialRampToValueAtTime(slideTo, audioCtx.currentTime + duration);
+                }
+                
+                gainNode.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+                
+                osc.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                
+                osc.start();
+                osc.stop(audioCtx.currentTime + duration);
+            } catch(e){}
+        }
+
+        // Sound Triggers
+        function playSplatSound() { playSynthSound(120, 'triangle', 0.25, 40); }
+        function playThrowSound() { playSynthSound(300, 'sine', 0.2, 900); }
+        function playPopupSound() { playSynthSound(440, 'sine', 0.15, 660); }
+        function playWaddleSound() { playSynthSound(100, 'triangle', 0.08, 50); }
+        function playCoinsSound() { playSynthSound(987, 'sine', 0.1); setTimeout(() => playSynthSound(1318, 'sine', 0.2), 80); }
+
+        // Core Player Game state
+        const state = {
+            username: 'Penguin',
+            coins: 500,
+            color: '#0288D1',
+            equipped: {
+                hat: false,
+                hoodie: false,
+                glasses: false,
+                cape: false
+            },
+            inventory: ['hat'], // Started with Propeller Hat unlocked
+            puffle: null, // "Adopted" Puffle state
+            puffleColor: 0xFF0000
+        };
+
+        let currentRoom = 'town';
+        let currentAction = 'idle';
+        let isSnowballMode = false;
+
+        // UI Helpers
+        function selectColor(index, hex) {
+            document.querySelectorAll('.color-picker-opt').forEach((el, idx) => {
+                if(idx === index) el.classList.remove('opacity-50');
+                else el.classList.add('opacity-50');
+            });
+            state.color = hex;
+            playPopupSound();
+        }
+
+        function goToServers() {
+            const usernameVal = document.getElementById('login-username').value.trim();
+            if (usernameVal) state.username = usernameVal;
+            document.getElementById('login-form-panel').classList.add('hidden');
+            document.getElementById('server-selector-panel').classList.remove('hidden');
+            playPopupSound();
+        }
+
+        function backToLogin() {
+            document.getElementById('server-selector-panel').classList.add('hidden');
+            document.getElementById('login-form-panel').classList.remove('hidden');
+            playPopupSound();
+        }
+
+        function enterServer(serverName) {
+            document.getElementById('login-screen').style.transform = 'translateY(-100%)';
+            setTimeout(() => {
+                document.getElementById('login-screen').classList.add('hidden');
+            }, 600);
+            
+            // Sync player data to procedural 3D elements
+            rebuildMyPenguinColor();
+            updatePlayerCardUI();
+            
+            // Welcome log
+            addChatRow("System", `Logged into server ${serverName} as ${state.username}!`);
+            playCoinsSound();
+
+            // Populate room with cute interactive bots
+            spawnRandomRoomBots();
+        }
+
+        function addChatRow(sender, message) {
+            const r = document.createElement('div');
+            r.className = 'bg-white/80 border-2 border-[#002244] px-3 py-1 rounded-lg text-sm font-bold text-[#002244] max-w-max shadow-sm';
+            r.innerHTML = `<strong>${sender}:</strong> ${message}`;
+            const chatLog = document.getElementById('chat-log');
+            chatLog.appendChild(r);
+            chatLog.scrollTop = chatLog.scrollHeight;
+        }
+
+
+        // --- STREAMING_CHUNK:Setting up the Three.js 3D scene, cameras, lights, and shadows... ---
         const container = document.getElementById('canvas-container');
-        const overlaysContainer = document.getElementById('overlays-container');
+        const bubblesContainer = document.getElementById('bubbles-container');
         
         const scene = new THREE.Scene();
+
+        // Authentic camera angle
         const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 1000);
-        camera.position.set(0, 22, 32);
+        camera.position.set(0, 24, 38);
         camera.lookAt(0, 0, 0);
 
         const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setClearColor(0x000000, 0); 
         renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         container.appendChild(renderer.domElement);
 
-        scene.add(new THREE.AmbientLight(0xffffff, 0.75));
-        const dirLight = new THREE.DirectionalLight(0xffffff, 0.5);
-        dirLight.position.set(20, 40, 20);
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.85);
+        scene.add(ambientLight);
+        
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.45);
+        dirLight.position.set(15, 30, 15);
         dirLight.castShadow = true;
+        dirLight.shadow.camera.left = -30;
+        dirLight.shadow.camera.right = 30;
+        dirLight.shadow.camera.top = 30;
+        dirLight.shadow.camera.bottom = -30;
+        dirLight.shadow.mapSize.width = 1024;
+        dirLight.shadow.mapSize.height = 1024;
         scene.add(dirLight);
 
-        const groundGeo = new THREE.PlaneGeometry(300, 300);
-        const groundMat = new THREE.ShadowMaterial({ opacity: 0.2 }); 
+        // Ground Floor capturing shadows overlaying our 2D canvas room layouts
+        const groundGeo = new THREE.PlaneGeometry(200, 200);
+        const groundMat = new THREE.ShadowMaterial({ opacity: 0.22 }); 
         const ground = new THREE.Mesh(groundGeo, groundMat);
         ground.rotation.x = -Math.PI / 2;
         ground.receiveShadow = true; 
         scene.add(ground);
 
-        function create3DIgloo(x, z) {
-            const group = new THREE.Group();
-            group.position.set(x, 0, z);
-            const iceMat = new THREE.MeshStandardMaterial({ color: 0xE0F7FA, roughness: 0.3, metalness: 0.1 });
-            
-            const dome = new THREE.Mesh(new THREE.SphereGeometry(5, 16, 12, 0, Math.PI * 2, 0, Math.PI / 2), iceMat);
-            dome.castShadow = true; dome.receiveShadow = true;
-            group.add(dome);
 
-            const tunnel = new THREE.Mesh(new THREE.CylinderGeometry(1.8, 1.8, 4, 16, 1, false, 0, Math.PI), iceMat);
-            tunnel.rotation.x = Math.PI / 2; tunnel.rotation.z = Math.PI;
-            tunnel.position.set(0, 0, 4.5);
-            tunnel.castShadow = true; tunnel.receiveShadow = true;
-            group.add(tunnel);
-
-            scene.add(group);
+        // --- STREAMING_CHUNK:Defining the procedural 3D penguin generation with dynamic clothing slots... ---
+        // Custom Materials setup
+        const bodyMaterials = {};
+        function getBodyMaterial(hex) {
+            const key = hex.toString();
+            if (!bodyMaterials[key]) {
+                bodyMaterials[key] = new THREE.MeshStandardMaterial({ color: parseInt(hex.replace('#', '0x')), roughness: 0.6 });
+            }
+            return bodyMaterials[key];
         }
 
-        create3DIgloo(35, -50);
-        create3DIgloo(55, -35);
-
-        function createPenguinMesh() {
+        // Procedure to build an ultra-faithful Penguin with slot meshes
+        function createPenguin(colorHex) {
             const penguinGroup = new THREE.Group();
-            const bodyMat = new THREE.MeshStandardMaterial({ color: 0x222222 });
-            const bellyMat = new THREE.MeshStandardMaterial({ color: 0xffffff });
-            const beakMat = new THREE.MeshStandardMaterial({ color: 0xffaa00 });
+            
+            const pColor = getBodyMaterial(colorHex);
+            const bellyMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.5 });
+            const beakMat = new THREE.MeshStandardMaterial({ color: 0xFF9100 });
 
-            const body = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 1, 1.8, 16), bodyMat);
-            body.position.y = 1.2; body.castShadow = true; penguinGroup.add(body);
+            // Body base capsule
+            const bodyGeo = new THREE.CylinderGeometry(0.8, 1, 1.8, 16);
+            const body = new THREE.Mesh(bodyGeo, pColor);
+            body.position.y = 1.2;
+            body.castShadow = true;
+            penguinGroup.add(body);
 
-            const belly = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.75, 1.4, 16), bellyMat);
-            belly.position.set(0, 1.2, 0.3); belly.scale.set(1, 1, 0.5); belly.castShadow = true;
+            // Large round white belly patch
+            const bellyGeo = new THREE.CylinderGeometry(0.6, 0.75, 1.4, 16);
+            const belly = new THREE.Mesh(bellyGeo, bellyMat);
+            belly.position.set(0, 1.2, 0.3);
+            belly.scale.set(1, 1, 0.5); 
+            belly.castShadow = true;
             penguinGroup.add(belly);
 
-            const head = new THREE.Mesh(new THREE.SphereGeometry(0.8, 16, 16), bodyMat);
-            head.position.y = 2.4; head.castShadow = true; penguinGroup.add(head);
+            // Rounded Head
+            const headGeo = new THREE.SphereGeometry(0.8, 16, 16);
+            const head = new THREE.Mesh(headGeo, pColor);
+            head.position.y = 2.4;
+            head.castShadow = true;
+            penguinGroup.add(head);
 
-            const beak = new THREE.Mesh(new THREE.ConeGeometry(0.25, 0.6, 16), beakMat);
-            beak.rotation.x = Math.PI / 2; beak.position.set(0, 2.4, 0.8); beak.castShadow = true;
+            // Iconic orange beak cone
+            const beakGeo = new THREE.ConeGeometry(0.25, 0.6, 16);
+            const beak = new THREE.Mesh(beakGeo, beakMat);
+            beak.rotation.x = Math.PI / 2;
+            beak.position.set(0, 2.4, 0.8);
+            beak.castShadow = true;
             penguinGroup.add(beak);
 
-            const leftFlipper = new THREE.Mesh(new THREE.BoxGeometry(0.2, 1, 0.4), bodyMat);
-            leftFlipper.position.set(-1.0, 1.4, 0); leftFlipper.rotation.z = Math.PI / 6; leftFlipper.castShadow = true;
+            // Side Flippers
+            const flipperGeo = new THREE.BoxGeometry(0.2, 0.9, 0.4);
+            const leftFlipper = new THREE.Mesh(flipperGeo, pColor);
+            leftFlipper.position.set(-1.0, 1.4, 0);
+            leftFlipper.rotation.z = Math.PI / 6;
+            leftFlipper.castShadow = true;
             penguinGroup.add(leftFlipper);
 
-            const rightFlipper = new THREE.Mesh(new THREE.BoxGeometry(0.2, 1, 0.4), bodyMat);
-            rightFlipper.position.set(1.0, 1.4, 0); rightFlipper.rotation.z = -Math.PI / 6; rightFlipper.castShadow = true;
+            const rightFlipper = new THREE.Mesh(flipperGeo, pColor);
+            rightFlipper.position.set(1.0, 1.4, 0);
+            rightFlipper.rotation.z = -Math.PI / 6;
+            rightFlipper.castShadow = true;
             penguinGroup.add(rightFlipper);
 
+            // Wide flat comic feet
+            const footGeo = new THREE.BoxGeometry(0.4, 0.15, 0.7);
+            const leftFoot = new THREE.Mesh(footGeo, beakMat);
+            leftFoot.position.set(-0.4, 0.1, 0.2);
+            leftFoot.castShadow = true;
+            penguinGroup.add(leftFoot);
+
+            const rightFoot = new THREE.Mesh(footGeo, beakMat);
+            rightFoot.position.set(0.4, 0.1, 0.2);
+            rightFoot.castShadow = true;
+            penguinGroup.add(rightFoot);
+
+            // --- PROCEDURAL ATTACHED ITEMS OVERLAYS ---
+            const itemContainer = new THREE.Group();
+            penguinGroup.add(itemContainer);
+
+            // Storing references for animation
+            penguinGroup.userData = {
+                leftFlipper,
+                rightFlipper,
+                bodyMesh: body,
+                headMesh: head,
+                bellyMesh: belly,
+                itemContainer,
+                equipped: { hat: false, hoodie: false, glasses: false, cape: false },
+                currentAction: 'idle',
+                room: 'town'
+            };
+
+            scene.add(penguinGroup);
             return penguinGroup;
         }
 
-        function setupDOMOverlay(id, initialName = "Penguin") {
-            const nameTag = document.createElement('div');
-            nameTag.className = 'player-name';
-            nameTag.innerText = initialName;
-            overlaysContainer.appendChild(nameTag);
+        // Apply item meshes on 3D Penguin group
+        function applyPenguinOutfit(pGroup, equippedConfig) {
+            const container = pGroup.userData.itemContainer;
+            // Clear current items
+            while(container.children.length > 0) {
+                container.remove(container.children[0]);
+            }
 
-            overlays[id] = { nameElement: nameTag, bubbleElement: null, bubbleTimer: null };
+            pGroup.userData.equipped = { ...equippedConfig };
+
+            const yellowMat = new THREE.MeshStandardMaterial({ color: 0xFBC02D, roughness: 0.5 });
+            const redMat = new THREE.MeshStandardMaterial({ color: 0xD32F2F });
+            const darkMat = new THREE.MeshStandardMaterial({ color: 0x212121 });
+
+            // 1. Render Propeller Hat
+            if(equippedConfig.hat) {
+                const hatCap = new THREE.Mesh(new THREE.SphereGeometry(0.75, 12, 12), yellowMat);
+                hatCap.position.y = 2.9;
+                hatCap.scale.set(1, 0.4, 1);
+                container.add(hatCap);
+
+                const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.3), darkMat);
+                stem.position.y = 3.2;
+                container.add(stem);
+
+                const blade = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.02, 0.15), redMat);
+                blade.position.y = 3.35;
+                blade.name = "propeller-blade";
+                container.add(blade);
+            }
+
+            // 2. Render Black Hoodie
+            if(equippedConfig.hoodie) {
+                const hoodieBody = new THREE.Mesh(new THREE.CylinderGeometry(0.85, 1.05, 1.5, 16), darkMat);
+                hoodieBody.position.y = 1.35;
+                container.add(hoodieBody);
+            }
+
+            // 3. Render Sunglasses
+            if(equippedConfig.glasses) {
+                const lensGeo = new THREE.BoxGeometry(0.35, 0.2, 0.05);
+                const lLens = new THREE.Mesh(lensGeo, darkMat);
+                lLens.position.set(-0.35, 2.5, 0.75);
+                container.add(lLens);
+
+                const rLens = new THREE.Mesh(lensGeo, darkMat);
+                rLens.position.set(0.35, 2.5, 0.75);
+                container.add(rLens);
+            }
+
+            // 4. Render Red Cape
+            if(equippedConfig.cape) {
+                const cape = new THREE.Mesh(new THREE.BoxGeometry(0.8, 1.6, 0.1), redMat);
+                cape.position.set(0, 1.1, -0.6);
+                cape.rotation.x = Math.PI / 15;
+                container.add(cape);
+            }
         }
 
-        const myPenguin = createPenguinMesh();
-        scene.add(myPenguin);
-        setupDOMOverlay(socket.id, "Penguin");
+        const myPenguin = createPenguin(state.color);
 
-        socket.on('currentPlayers', (players) => {
-            Object.keys(players).forEach((id) => {
-                if (id === socket.id) {
-                    document.getElementById('username-input').value = players[id].username;
-                    overlays[socket.id].nameElement.innerText = players[id].username;
-                    return;
-                }
-                const p = createPenguinMesh();
-                p.position.set(players[id].x, 0, players[id].z);
-                scene.add(p);
-                otherPlayers[id] = p;
-                setupDOMOverlay(id, players[id].username);
+
+        // --- STREAMING_CHUNK:Building the Puffle companion mesh and follow behaviors... ---
+        // Puffle 3D companion representation
+        let activePuffleMesh = null;
+
+        function createPuffle(colorHex) {
+            const pGroup = new THREE.Group();
+            const mat = new THREE.MeshStandardMaterial({ color: colorHex, roughness: 0.9 });
+            const eyeMat = new THREE.MeshStandardMaterial({ color: 0xffffff });
+            const pupilMat = new THREE.MeshStandardMaterial({ color: 0x000000 });
+
+            // Main round body
+            const body = new THREE.Mesh(new THREE.SphereGeometry(0.45, 16, 16), mat);
+            pGroup.add(body);
+
+            // Add cute fuzzy spikes (8 spikes positioned around the back)
+            for(let i = 0; i < 8; i++) {
+                const spike = new THREE.Mesh(new THREE.ConeGeometry(0.12, 0.3, 4), mat);
+                const angle = (i / 8) * Math.PI * 2;
+                spike.position.set(Math.cos(angle)*0.38, Math.sin(angle)*0.38, -0.15);
+                spike.rotation.z = angle - Math.PI / 2;
+                pGroup.add(spike);
+            }
+
+            // Eyes
+            const lEye = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 8), eyeMat);
+            lEye.position.set(-0.15, 0.1, 0.38);
+            pGroup.add(lEye);
+
+            const rEye = lEye.clone();
+            rEye.position.x = 0.15;
+            pGroup.add(rEye);
+
+            const pupil = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 8), pupilMat);
+            pupil.position.set(-0.15, 0.1, 0.46);
+            pGroup.add(pupil);
+
+            const pupilR = pupil.clone();
+            pupilR.position.x = 0.15;
+            pGroup.add(pupilR);
+
+            scene.add(pGroup);
+            return pGroup;
+        }
+
+        function adoptPuffle(puffleType, colorHex) {
+            if(activePuffleMesh) scene.remove(activePuffleMesh);
+            state.puffle = puffleType;
+            state.puffleColor = colorHex;
+            activePuffleMesh = createPuffle(colorHex);
+            activePuffleMesh.position.copy(myPenguin.position).add(new THREE.Vector3(-2, 0.4, -2));
+            playCoinsSound();
+            closePuffleWindow();
+            addChatRow("Adopt Center", `You adopted a lovely ${puffleType} Puffle!`);
+        }
+
+        function removePuffle() {
+            if(activePuffleMesh) {
+                scene.remove(activePuffleMesh);
+                activePuffleMesh = null;
+            }
+            state.puffle = null;
+            playPopupSound();
+            closePuffleWindow();
+        }
+
+
+        // --- STREAMING_CHUNK:Implementing snowball physics, projectile paths, and impact splats... ---
+        // Snowball simulation engine assets
+        const snowballsList = [];
+
+        function launchSnowball(startPos, endPos) {
+            playThrowSound();
+
+            const ballGeo = new THREE.SphereGeometry(0.2, 8, 8);
+            const ballMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.9 });
+            const ballMesh = new THREE.Mesh(ballGeo, ballMat);
+            
+            ballMesh.position.copy(startPos);
+            ballMesh.position.y += 1.8; // throw from head height
+            scene.add(ballMesh);
+
+            const distance = startPos.distanceTo(endPos);
+            const duration = Math.max(0.4, distance * 0.08); // speed of throw
+            
+            snowballsList.push({
+                mesh: ballMesh,
+                start: ballMesh.position.clone(),
+                end: endPos.clone(),
+                progress: 0,
+                duration: duration
             });
-        });
 
-        socket.on('newPlayer', (data) => {
-            const p = createPenguinMesh();
-            p.position.set(data.playerInfo.x, 0, data.playerInfo.z);
-            scene.add(p);
-            otherPlayers[data.id] = p;
-            setupDOMOverlay(data.id, data.playerInfo.username);
-        });
+            // Earn a tiny reward for playing
+            addCoins(2);
+        }
 
-        socket.on('playerMoved', (data) => {
-            if (otherPlayers[data.id]) {
-                otherPlayers[data.id].position.set(data.x, 0, data.z);
-                otherPlayers[data.id].rotation.y = data.yRot;
-                otherPlayers[data.id].rotation.z = Math.sin(Date.now() * 0.015) * 0.15;
+        function createSplatImpact2D(screenPos) {
+            playSplatSound();
+            const splat = document.createElement('div');
+            splat.className = 'snow-splat';
+            splat.style.left = `${screenPos.x}px`;
+            splat.style.top = `${screenPos.y}px`;
+            bubblesContainer.appendChild(splat);
+            setTimeout(() => {
+                splat.remove();
+            }, 4000);
+        }
+
+        function addCoins(amount) {
+            state.coins += amount;
+            document.getElementById('player-card-coins').innerText = state.coins;
+            document.getElementById('catalog-wallet').innerText = state.coins;
+        }
+
+
+        // --- STREAMING_CHUNK:Establishing user actions, emote spawning, and room-changing routines... ---
+        // Lively interactive Bots AI system
+        const botsList = [];
+        const botQuotes = [
+            "Wanna tip the Iceberg today?",
+            "Let's meet at the Dance Club!",
+            "Who wants to go to the Stage?",
+            "Add me as buddy!",
+            "Adopted a cute Puffle earlier!",
+            "I love throwing snowballs!",
+            "Hahaha nice outfit!",
+            "Classic 2008 Club Penguin is the best!",
+            "Who wants pizza at the Plaza?"
+        ];
+
+        function spawnRandomRoomBots() {
+            // Remove previous bots
+            botsList.forEach(b => {
+                scene.remove(b.mesh);
+                if(speechBubbles[b.id]) { speechBubbles[b.id].element.remove(); delete speechBubbles[b.id]; }
+            });
+            botsList.length = 0;
+
+            const names = ["WaddleMan", "Snowy", "IceCube", "NinjaCP", "Pinky", "Garry", "PuffleFan"];
+            const colors = ["#388E3C", "#D32F2F", "#F57C00", "#7B1FA2", "#EC407A", "#00B0FF", "#8D6E63"];
+
+            // Spawn 4 random bots
+            for (let i = 0; i < 4; i++) {
+                const rColor = colors[i % colors.length];
+                const botMesh = createPenguin(rColor);
+                
+                // Set random position
+                botMesh.position.set((Math.random() - 0.5) * 16, 0, (Math.random() - 0.5) * 16);
+                
+                // Random outfits on bots
+                const randomOutfit = {
+                    hat: Math.random() > 0.4,
+                    hoodie: Math.random() > 0.6,
+                    glasses: Math.random() > 0.5,
+                    cape: Math.random() > 0.7
+                };
+                applyPenguinOutfit(botMesh, randomOutfit);
+
+                botsList.push({
+                    id: 'bot_' + i,
+                    name: names[i % names.length],
+                    mesh: botMesh,
+                    targetPos: botMesh.position.clone(),
+                    action: 'idle',
+                    waddleTimer: 0,
+                    lastChatTime: Date.now() + Math.random() * 8000
+                });
             }
-        });
+        }
 
-        socket.on('usernameUpdated', (data) => {
-            if (overlays[data.id]) {
-                overlays[data.id].nameElement.innerText = data.username;
+        // Action controls
+        function setPlayerAction(actionType) {
+            currentAction = actionType;
+            closeAllPopups();
+            playPopupSound();
+            if(actionType === 'dance') {
+                addCoins(5); // bonus for dancing
             }
-        });
+        }
 
-        socket.on('playerDisconnected', (id) => {
-            if (otherPlayers[id]) { scene.remove(otherPlayers[id]); delete otherPlayers[id]; }
-            if (overlays[id]) {
-                if (overlays[id].nameElement) overlays[id].nameElement.remove();
-                if (overlays[id].bubbleElement) overlays[id].bubbleElement.remove();
-                delete overlays[id];
+        function sendEmote(emoji) {
+            spawnEmoteBubble(socket.id || 'me', emoji);
+            closeAllPopups();
+            playPopupSound();
+        }
+
+        function switchRoom(roomName) {
+            currentRoom = roomName;
+            document.body.className = 'room-' + roomName;
+            
+            myPenguin.position.set(0, 0, 0);
+            targetPosition.set(0, 0, 0);
+            isMoving = false;
+            currentAction = 'idle';
+
+            document.getElementById('chat-log').innerHTML = '';
+            closeAllPopups();
+            playPopupSound();
+
+            addChatRow("System", `Entered the ${roomName.toUpperCase()}!`);
+            spawnRandomRoomBots();
+        }
+
+        function toggleSnowballMode() {
+            isSnowballMode = !isSnowballMode;
+            const btn = document.getElementById('snowball-toggle');
+            if (isSnowballMode) {
+                btn.classList.add('border-yellow-400', 'scale-115');
+                document.body.classList.add('snowball-active');
+            } else {
+                btn.classList.remove('border-yellow-400', 'scale-115');
+                document.body.classList.remove('snowball-active');
             }
-        });
+            playPopupSound();
+        }
 
+
+        // --- DYNAMIC OUTFIT & INVENTORY ACTIONS ---
+        function buyItem(itemType, cost) {
+            if(state.coins < cost) {
+                alert("You don't have enough coins! Stand & Dance to earn coins.");
+                return;
+            }
+            state.coins -= cost;
+            state.inventory.push(itemType);
+            addCoins(0); // updates UI counters
+            playCoinsSound();
+            updatePlayerCardUI();
+            addChatRow("Catalog", `You bought a ${itemType}! Open Player Card to equip it.`);
+        }
+
+        function equipItem(itemType) {
+            state.equipped[itemType] = !state.equipped[itemType];
+            applyPenguinOutfit(myPenguin, state.equipped);
+            updatePlayerCardUI();
+            playPopupSound();
+        }
+
+        function clearAllOutfits() {
+            state.equipped = { hat: false, hoodie: false, glasses: false, cape: false };
+            applyPenguinOutfit(myPenguin, state.equipped);
+            updatePlayerCardUI();
+            playPopupSound();
+        }
+
+        function rebuildMyPenguinColor() {
+            scene.remove(myPenguin);
+            const newMe = createPenguin(state.color);
+            // Replace references
+            newMe.position.copy(myPenguin.position);
+            newMe.rotation.copy(myPenguin.rotation);
+            newMe.userData = myPenguin.userData;
+            myPenguin.position.set(1000, 0, 1000); // hide old
+            
+            // Assign newly created group
+            Object.assign(myPenguin, newMe);
+            applyPenguinOutfit(myPenguin, state.equipped);
+        }
+
+        function updatePlayerCardUI() {
+            document.getElementById('player-card-username').innerText = state.username;
+            document.getElementById('player-card-coins').innerText = state.coins;
+            document.getElementById('catalog-wallet').innerText = state.coins;
+
+            // Render live item changes on Player Card vector preview SVG
+            const itemSVGGroup = document.getElementById('avatar-equipped-items');
+            itemSVGGroup.innerHTML = ''; // clean
+
+            if(state.equipped.hat) {
+                itemSVGGroup.innerHTML += `
+                    <ellipse cx="50" cy="22" rx="18" ry="6" fill="#FBC02D" stroke="#002244" stroke-width="2"/>
+                    <rect x="49" y="12" width="2" height="6" fill="#000"/>
+                    <rect x="40" y="10" width="20" height="2" fill="#D32F2F"/>
+                `;
+            }
+            if(state.equipped.glasses) {
+                itemSVGGroup.innerHTML += `
+                    <rect x="35" y="32" width="12" height="6" fill="#212121" stroke="#000" rx="2"/>
+                    <rect x="53" y="32" width="12" height="6" fill="#212121" stroke="#000" rx="2"/>
+                    <line x1="47" y1="35" x2="53" y2="35" stroke="#000" stroke-width="2"/>
+                `;
+            }
+            if(state.equipped.cape) {
+                itemSVGGroup.innerHTML += `
+                    <path d="M 30,58 L 20,95 L 45,95 Z" fill="#D32F2F" stroke="#002244" stroke-width="2"/>
+                `;
+            }
+
+            // Sync color to card body
+            document.getElementById('avatar-body').setAttribute('fill', state.color);
+
+            // Re-map shop buttons if already unlocked
+            document.getElementById('buy-btn-hat').innerText = state.inventory.includes('hat') ? (state.equipped.hat ? "UNEQUIP":"EQUIP") : "BUY";
+            document.getElementById('buy-btn-hat').onclick = state.inventory.includes('hat') ? () => equipItem('hat') : () => buyItem('hat', 100);
+
+            document.getElementById('buy-btn-hoodie').innerText = state.inventory.includes('hoodie') ? (state.equipped.hoodie ? "UNEQUIP":"EQUIP") : "BUY";
+            document.getElementById('buy-btn-hoodie').onclick = state.inventory.includes('hoodie') ? () => equipItem('hoodie') : () => buyItem('hoodie', 180);
+
+            document.getElementById('buy-btn-glasses').innerText = state.inventory.includes('glasses') ? (state.equipped.glasses ? "UNEQUIP":"EQUIP") : "BUY";
+            document.getElementById('buy-btn-glasses').onclick = state.inventory.includes('glasses') ? () => equipItem('glasses') : () => buyItem('glasses', 80);
+
+            document.getElementById('buy-btn-cape').innerText = state.inventory.includes('cape') ? (state.equipped.cape ? "UNEQUIP":"EQUIP") : "BUY";
+            document.getElementById('buy-btn-cape').onclick = state.inventory.includes('cape') ? () => equipItem('cape') : () => buyItem('cape', 150);
+        }
+
+
+        // --- SPATIAL DIALOG AND EMOTES BUBBLES ---
+        function spawnTextSpeechBubble(id, text) {
+            if (speechBubbles[id]) { speechBubbles[id].element.remove(); clearTimeout(speechBubbles[id].timer); }
+            const targetP = (id === 'me') ? myPenguin : otherPlayers[id];
+            if (!targetP) return;
+
+            const b = document.createElement('div');
+            b.className = 'speech-bubble';
+            b.innerText = text;
+            bubblesContainer.appendChild(b);
+
+            speechBubbles[id] = {
+                element: b, type: 'text', target: targetP,
+                timer: setTimeout(() => { b.remove(); delete speechBubbles[id]; }, 4500)
+            };
+        }
+
+        function spawnEmoteBubble(id, emoji) {
+            const targetP = (id === 'me' || id === 'me-custom') ? myPenguin : otherPlayers[id];
+            if (!targetP) return;
+
+            const emo = document.createElement('div');
+            emo.className = 'absolute pointer-events-none text-4xl filter drop-shadow-md z-20';
+            emo.innerText = emoji;
+            emo.style.animation = 'floatUp 1.2s ease-out forwards';
+            bubblesContainer.appendChild(emo);
+
+            const tempId = Math.random().toString();
+            speechBubbles[tempId] = { element: emo, target: targetP, type: 'emote' };
+            setTimeout(() => { emo.remove(); delete speechBubbles[tempId]; }, 1200);
+        }
+
+        // Action popup management
+        function togglePopup(id) {
+            const el = document.getElementById(id);
+            const wasOpen = !el.classList.contains('hidden');
+            closeAllPopups();
+            if(!wasOpen) {
+                el.classList.remove('hidden');
+                el.classList.add('flex');
+                playPopupSound();
+            }
+        }
+
+        function closeAllPopups() {
+            document.querySelectorAll('.cp-popup-window').forEach(p => {
+                p.classList.add('hidden');
+                p.classList.remove('flex');
+            });
+            document.getElementById('popup-emotes').classList.add('hidden');
+            document.getElementById('popup-actions').classList.add('hidden');
+            document.getElementById('popup-map').classList.add('hidden');
+        }
+
+        function openPlayerCard() {
+            closeAllPopups();
+            document.getElementById('player-card').classList.remove('hidden');
+            document.getElementById('player-card').classList.add('flex');
+            updatePlayerCardUI();
+            playPopupSound();
+        }
+        function closePlayerCard() { document.getElementById('player-card').classList.add('hidden'); playPopupSound(); }
+
+        function openCatalog() {
+            closeAllPopups();
+            document.getElementById('catalog-window').classList.remove('hidden');
+            document.getElementById('catalog-window').classList.add('flex');
+            updatePlayerCardUI();
+            playPopupSound();
+        }
+        function closeCatalog() { document.getElementById('catalog-window').classList.add('hidden'); playPopupSound(); }
+        function closePuffleWindow() { document.getElementById('puffle-window').classList.add('hidden'); playPopupSound(); }
+
+
+        // --- CHAT WRAPPERS INPUT ---
+        function triggerMessageSend() {
+            const msgInput = document.getElementById('message-input');
+            const txt = msgInput.value.trim();
+            if(!txt) return;
+
+            addChatRow(state.username, txt);
+            spawnTextSpeechBubble('me', txt);
+            msgInput.value = '';
+            addCoins(3); // reward speaking
+            playPopupSound();
+        }
+        document.getElementById('send-btn').onclick = triggerMessageSend;
+        document.getElementById('message-input').onkeypress = (e) => { if(e.key === 'Enter') triggerMessageSend(); };
+
+
+        // --- RAYCAST GROUND NAV OR SNOWBALL TARGETING ---
         const raycaster = new THREE.Raycaster();
         const mouse = new THREE.Vector2();
         let targetPosition = new THREE.Vector3(0, 0, 0);
         let isMoving = false;
 
         window.addEventListener('pointerdown', (event) => {
-            if (event.target.closest('#ui-container') || event.target.closest('#emote-drawer') || event.target.closest('#map-modal')) return;
+            if (event.clientY > window.innerHeight - 80 || event.target.closest('.cp-popup-window') || event.target.closest('#chat-log') || event.target.closest('.cp-taskbar') || event.target.closest('#login-screen')) return;
 
             mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
             mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
@@ -419,127 +1259,33 @@
             const intersects = raycaster.intersectObject(ground);
 
             if (intersects.length > 0) {
-                targetPosition.copy(intersects[0].point);
-                targetPosition.y = 0; 
-                isMoving = true;
+                const clickPos = intersects[0].point.clone();
+                clickPos.y = 0;
+
+                if (isSnowballMode) {
+                    launchSnowball(myPenguin.position, clickPos);
+                    toggleSnowballMode(); // release cursor state back to standard waddles
+                } else {
+                    targetPosition.copy(clickPos);
+                    isMoving = true;
+                    if(currentAction !== 'idle') currentAction = 'idle';
+                }
             }
         });
 
-        const chatLog = document.getElementById('chat-log');
-        const usernameInput = document.getElementById('username-input');
-        const messageInput = document.getElementById('message-input');
-        const sendBtn = document.getElementById('send-btn');
 
-        function submitTextMessage() {
-            const user = usernameInput.value.trim() || 'Penguin';
-            const msg = messageInput.value.trim();
-            if (!msg) return;
-            socket.emit('chatMessage', { username: user, msg: msg });
-            messageInput.value = '';
-        }
-
-        sendBtn.addEventListener('click', submitTextMessage);
-        messageInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') submitTextMessage(); });
-        
-        usernameInput.addEventListener('change', () => {
-            const updatedName = usernameInput.value.trim() || 'Penguin';
-            socket.emit('updateUsername', updatedName);
-        });
-
-        socket.on('newChatMessage', (data) => {
-            const msgDiv = document.createElement('div');
-            msgDiv.style.marginBottom = "4px";
-            msgDiv.innerHTML = `<strong>${data.username}:</strong> ${data.msg}`;
-            chatLog.appendChild(msgDiv);
-            chatLog.scrollTop = chatLog.scrollHeight; 
-            triggerTextBubble(data.id, data.msg);
-        });
-
-        function triggerTextBubble(id, text) {
-            if (!overlays[id]) return;
-            if (overlays[id].bubbleElement) {
-                overlays[id].bubbleElement.remove();
-                clearTimeout(overlays[id].bubbleTimer);
-            }
-            const bubble = document.createElement('div');
-            bubble.className = 'speech-bubble';
-            bubble.innerText = text;
-            overlaysContainer.appendChild(bubble);
-            overlays[id].bubbleElement = bubble;
-
-            overlays[id].bubbleTimer = setTimeout(() => {
-                bubble.remove();
-                overlays[id].bubbleElement = null;
-            }, 4000);
-        }
-
-        const emoteBtn = document.getElementById('emote-btn');
-        const emoteDrawer = document.getElementById('emote-drawer');
-
-        emoteBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            emoteDrawer.style.display = (emoteDrawer.style.display === 'flex') ? 'none' : 'flex';
-        });
-
-        document.querySelectorAll('.emote-option').forEach(el => {
-            el.addEventListener('click', () => {
-                socket.emit('playerEmote', el.innerText);
-                emoteDrawer.style.display = 'none';
-            });
-        });
-
-        window.addEventListener('click', () => { emoteDrawer.style.display = 'none'; });
-
-        socket.on('newPlayerEmote', (data) => {
-            const bubbleEmote = document.createElement('div');
-            bubbleEmote.className = 'floating-emote';
-            bubbleEmote.innerText = data.emote;
-            overlaysContainer.appendChild(bubbleEmote);
-
-            const tempEmoteRef = { element: bubbleEmote, id: data.id };
-            activeEmotes.push(tempEmoteRef);
-
-            setTimeout(() => {
-                bubbleEmote.remove();
-                activeEmotes.splice(activeEmotes.indexOf(tempEmoteRef), 1);
-            }, 1500);
-        });
-
-        const mapBtn = document.getElementById('map-btn');
-        const mapModal = document.getElementById('map-modal');
-        mapBtn.addEventListener('click', () => toggleMap(true));
-        
-        function toggleMap(isOpen) { mapModal.style.display = isOpen ? 'block' : 'none'; }
-
-        function teleportToRegion(x, z) {
-            myPenguin.position.set(x, 0, z);
-            targetPosition.set(x, 0, z);
-            isMoving = false;
-            myPenguin.rotation.z = 0;
-            camera.position.set(x, 22, z + 32);
-            camera.lookAt(x, 0, z);
-            
-            socket.emit('playerMovement', { x: x, z: z, yRot: myPenguin.rotation.y });
-            toggleMap(false);
-        }
-
-        function alignDOMTag(penguinInstance, domElement, heightShift) {
-            if (!penguinInstance || !domElement) return;
-            const modelPosition = penguinInstance.position.clone();
-            modelPosition.y += heightShift;
-            modelPosition.project(camera);
-            const mappedX = (modelPosition.x * 0.5 + 0.5) * window.innerWidth;
-            const mappedY = (modelPosition.y * -0.5 + 0.5) * window.innerHeight;
-            domElement.style.left = `${mappedX}px`;
-            domElement.style.top = `${mappedY}px`;
-        }
-
+        // --- STREAMING_CHUNK:Running the physics engine loop, animations, and coordinate projections... ---
         const clock = new THREE.Clock();
         const speed = 7.0; 
 
         function animate() {
             requestAnimationFrame(animate);
             const delta = clock.getDelta();
+            const timeGlobal = Date.now();
+
+            // 1. Process project waddles
+            resetSkeletonTransforms(myPenguin);
+            botsList.forEach(b => resetSkeletonTransforms(b.mesh));
 
             if (isMoving) {
                 const distance = myPenguin.position.distanceTo(targetPosition);
@@ -547,34 +1293,155 @@
                     const targetAngle = Math.atan2(targetPosition.x - myPenguin.position.x, targetPosition.z - myPenguin.position.z);
                     myPenguin.rotation.y = targetAngle;
 
-                    const direction = new THREE.Vector3().subVectors(targetPosition, myPenguin.position).normalize();
-                    myPenguin.position.add(direction.multiplyScalar(speed * delta));
-                    myPenguin.rotation.z = Math.sin(Date.now() * 0.015) * 0.15;
+                    const dir = new THREE.Vector3().subVectors(targetPosition, myPenguin.position).normalize();
+                    myPenguin.position.add(dir.multiplyScalar(speed * delta));
 
-                    camera.position.set(myPenguin.position.x, 22, myPenguin.position.z + 32);
-                    camera.lookAt(myPenguin.position.x, 0, myPenguin.position.z);
-
-                    socket.emit('playerMovement', { x: myPenguin.position.x, z: myPenguin.position.z, yRot: myPenguin.rotation.y });
+                    // Sideways hip waddling loop 
+                    myPenguin.rotation.z = Math.sin(timeGlobal * 0.015) * 0.18;
+                    myPenguin.position.y = Math.abs(Math.sin(timeGlobal * 0.015)) * 0.22;
+                    
+                    if (Math.floor(timeGlobal * 0.015) % 12 === 0) playWaddleSound();
                 } else {
                     isMoving = false;
-                    myPenguin.rotation.z = 0; 
                 }
             }
 
-            Object.keys(overlays).forEach(id => {
-                const targetPenguin = (id === socket.id) ? myPenguin : otherPlayers[id];
-                if (targetPenguin && overlays[id]) {
-                    alignDOMTag(targetPenguin, overlays[id].nameElement, 0.1);
-                    alignDOMTag(targetPenguin, overlays[id].bubbleElement, 3.5);
+            // Bob propeller hats dynamically
+            const rotatingPropeller = myPenguin.getObjectByName("propeller-blade");
+            if (rotatingPropeller) rotatingPropeller.rotation.y += 0.25;
+
+            // Puffle Bobbing and Following
+            if (activePuffleMesh) {
+                const idealPufflePos = myPenguin.position.clone().add(new THREE.Vector3(Math.sin(timeGlobal * 0.002) * 1.5, 0.4, -1.8));
+                activePuffleMesh.position.lerp(idealPufflePos, 0.05);
+                activePuffleMesh.position.y += Math.sin(timeGlobal * 0.01) * 0.05; // floating bounce
+            }
+
+            // 2. Snowball projectile arcs calculation
+            for (let i = snowballsList.length - 1; i >= 0; i--) {
+                const sb = snowballsList[i];
+                sb.progress += delta / sb.duration;
+                if (sb.progress >= 1) {
+                    // Splat impact complete!
+                    const projectionVector = sb.end.clone();
+                    projectionVector.project(camera);
+                    const screenX = (projectionVector.x * .5 + .5) * window.innerWidth;
+                    const screenY = (projectionVector.y * -.5 + .5) * window.innerHeight;
+                    createSplatImpact2D({ x: screenX, y: screenY });
+
+                    scene.remove(sb.mesh);
+                    snowballsList.splice(i, 1);
+                } else {
+                    // Parabolic arc interpolation formula
+                    const currX = THREE.MathUtils.lerp(sb.start.x, sb.end.x, sb.progress);
+                    const currZ = THREE.MathUtils.lerp(sb.start.z, sb.end.z, sb.progress);
+                    // Gravity parabola curve height
+                    const h = Math.sin(sb.progress * Math.PI) * 4.5;
+                    sb.mesh.position.set(currX, sb.start.y + h, currZ);
+                }
+            }
+
+            // 3. AI Bots Walking & Chatting logic
+            botsList.forEach(bot => {
+                const bMesh = bot.mesh;
+                const bDist = bMesh.position.distanceTo(bot.targetPos);
+
+                if (bDist > 0.25) {
+                    const targetAngle = Math.atan2(bot.targetPos.x - bMesh.position.x, bot.targetPos.z - bMesh.position.z);
+                    bMesh.rotation.y = targetAngle;
+                    const dir = new THREE.Vector3().subVectors(bot.targetPos, bMesh.position).normalize();
+                    bMesh.position.add(dir.multiplyScalar(3.5 * delta)); // slightly slower than user
+
+                    bMesh.rotation.z = Math.sin(timeGlobal * 0.012) * 0.15;
+                    bMesh.position.y = Math.abs(Math.sin(timeGlobal * 0.012)) * 0.15;
+                    bot.action = 'idle';
+                } else {
+                    // Set new target periodically
+                    if (Math.random() < 0.005) {
+                        bot.targetPos.set((Math.random() - 0.5) * 16, 0, (Math.random() - 0.5) * 16);
+                    }
+                    // Random action triggers
+                    if (Math.random() < 0.002) {
+                        const act = ["dance", "wave", "idle"][Math.floor(Math.random()*3)];
+                        bot.action = act;
+                    }
+                }
+
+                executeActionTransformations(bMesh, bot.action, timeGlobal);
+
+                // Bot chat generation
+                if (Date.now() - bot.lastChatTime > 15000) {
+                    bot.lastChatTime = Date.now() + Math.random() * 8000;
+                    const randQuote = botQuotes[Math.floor(Math.random() * botQuotes.length)];
+                    addChatRow(bot.name, randQuote);
+                    spawnTextSpeechBubble(bot.id, randQuote);
+                    // Also mirror on local player's logic
+                    otherPlayers[bot.id] = bMesh;
                 }
             });
 
-            activeEmotes.forEach(emoteObj => {
-                const targetPenguin = (emoteObj.id === socket.id) ? myPenguin : otherPlayers[emoteObj.id];
-                alignDOMTag(targetPenguin, emoteObj.element, 4.2);
+            // Perform idle animations
+            executeActionTransformations(myPenguin, currentAction, timeGlobal);
+
+            // 4. Floating Speech Bubbles Coordinate Alignment Engine
+            Object.keys(speechBubbles).forEach(key => {
+                const bubble = speechBubbles[key];
+                const targetPenguin = bubble.target;
+                
+                if (targetPenguin && targetPenguin.position) {
+                    bubble.element.style.display = 'block';
+                    const headOffset = targetPenguin.position.clone();
+                    headOffset.y += (bubble.type === 'emote') ? 4.4 : 3.8; 
+                    headOffset.project(camera);
+
+                    const screenX = (headOffset.x * .5 + .5) * window.innerWidth;
+                    const screenY = (headOffset.y * -.5 + .5) * window.innerHeight;
+
+                    bubble.element.style.left = `${screenX}px`;
+                    bubble.element.style.top = `${screenY}px`;
+                } else {
+                    bubble.element.style.display = 'none';
+                }
             });
 
             renderer.render(scene, camera);
+        }
+
+        // Clean skeletal transformations state
+        function resetSkeletonTransforms(pMesh) {
+            pMesh.rotation.z = 0;
+            pMesh.position.y = 0;
+            pMesh.userData.leftFlipper.rotation.z = Math.PI / 6;
+            pMesh.userData.rightFlipper.rotation.z = -Math.PI / 6;
+            pMesh.userData.bodyMesh.position.y = 1.2;
+            pMesh.userData.headMesh.position.y = 2.4;
+            pMesh.userData.bellyMesh.position.y = 1.2;
+        }
+
+        // Complex keyframed Action Transforms 
+        function executeActionTransformations(pMesh, action, time) {
+            if (pMesh === myPenguin && isMoving) return;
+            
+            switch(action) {
+                case 'dance':
+                    pMesh.position.y = Math.abs(Math.sin(time * 0.012)) * 0.65;
+                    pMesh.rotation.y += 0.08;
+                    pMesh.userData.leftFlipper.rotation.z = Math.PI / 2.2;
+                    pMesh.userData.rightFlipper.rotation.z = -Math.PI / 2.2;
+                    break;
+                case 'wave':
+                    pMesh.userData.rightFlipper.rotation.z = -Math.PI / 1.1 + Math.sin(time * 0.02) * 0.45;
+                    break;
+                case 'sit':
+                    pMesh.position.y = -0.4;
+                    pMesh.userData.bodyMesh.position.y = 0.9;
+                    pMesh.userData.headMesh.position.y = 1.9;
+                    pMesh.userData.bellyMesh.position.y = 0.9;
+                    break;
+                case 'idle':
+                default:
+                    break;
+            }
         }
 
         window.addEventListener('resize', () => {
@@ -583,6 +1450,7 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
         });
 
+        // Start animation loop
         animate();
     </script>
 </body>
