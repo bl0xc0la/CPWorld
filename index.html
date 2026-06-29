@@ -183,6 +183,21 @@
             border-radius: 12px;
         }
 
+        /* --- THE YUKON SERVER EMULATOR PANEL --- */
+        #yukon-panel {
+            background: #001524;
+            border: 5px solid #00E5FF;
+            box-shadow: 0 0 25px rgba(0, 229, 255, 0.45);
+        }
+        .yukon-terminal {
+            background: #000911;
+            border: 2px solid #005cbf;
+        }
+        .terminal-glow-text {
+            color: #00E5FF;
+            text-shadow: 0 0 5px rgba(0, 229, 255, 0.4);
+        }
+
         /* 2D snowball impact splat overlay */
         .snow-splat {
             position: absolute;
@@ -208,6 +223,11 @@
     <!-- CANVAS ENGINE BACKGROUND -->
     <div id="canvas-container"></div>
     <div id="bubbles-container"></div>
+
+    <!-- YUKON FLOATING SYSTEM ANNOUNCEMENTS BANNER -->
+    <div id="yukon-announcement" class="hidden absolute top-[15px] left-1/2 -translate-x-1/2 bg-[#00E5FF] border-4 border-[#002244] text-[#001A33] px-6 py-2.5 rounded-full font-cp text-sm shadow-[0_4px_0_#002244] z-[3000] animate-bounce">
+        📢 <span id="announcement-text" class="font-bold">System Announcement</span>
+    </div>
 
     <!-- --- STREAMING_CHUNK:Structuring the login and server selection screens... -->
     <!-- AUTHENTIC LOGIN & SERVER INTERFACE -->
@@ -308,7 +328,93 @@
     <!-- --- STREAMING_CHUNK:Designing the main game container, interactive taskbars, and popups... -->
     <!-- --- INTERACTIVE GAME POPUP PANELS --- -->
     
-    <!-- 1. AUTHENTIC PLAYER CARD WINDOW -->
+    <!-- YUKON SERVER EMULATOR PANEL -->
+    <div id="yukon-panel" class="absolute left-[20%] top-[10%] w-[580px] h-[480px] cp-popup-window p-4 hidden flex-col z-[200]">
+        <div class="flex justify-between items-center mb-3">
+            <span class="text-[#00E5FF] font-cp text-lg uppercase drop-shadow-[0_2px_0_#000] flex items-center gap-2">❄️ YUKON HTML5 SERVER PANEL</span>
+            <button onclick="togglePopup('yukon-panel')" class="w-8 h-8 rounded-full bg-red-500 border-2 border-[#002244] text-white font-bold flex items-center justify-center hover:bg-red-600">X</button>
+        </div>
+        
+        <!-- Tab Selectors -->
+        <div class="flex gap-2 mb-3">
+            <button onclick="switchYukonTab('console')" id="yukon-tab-console" class="px-4 py-1.5 text-xs font-bold bg-[#00E5FF] text-[#001A33] border-2 border-[#002244] rounded-t-lg">🖥️ CONSOLE</button>
+            <button onclick="switchYukonTab('db')" id="yukon-tab-db" class="px-4 py-1.5 text-xs font-bold bg-[#005cbf] text-white border-2 border-[#002244] rounded-t-lg">🗄️ DATABASE</button>
+            <button onclick="switchYukonTab('config')" id="yukon-tab-config" class="px-4 py-1.5 text-xs font-bold bg-[#005cbf] text-white border-2 border-[#002244] rounded-t-lg">⚙️ CONFIG</button>
+        </div>
+
+        <!-- tab content: Console -->
+        <div id="yukon-content-console" class="flex flex-col flex-1 min-h-0 bg-[#000911] border-3 border-[#002244] rounded-lg p-3">
+            <div id="yukon-terminal-logs" class="flex-1 overflow-y-auto text-xs font-mono text-[#00E5FF] space-y-1 mb-2 pr-1 select-text">
+                <div>[System] Yukon Emulator v1.11.0-beta initialized...</div>
+                <div>[System] WebSockets successfully listening on port 4000</div>
+                <div>[Database] SQLite configuration synced (1 primary cluster mapped)</div>
+            </div>
+            <div class="flex gap-2 border-t border-[#002244] pt-2">
+                <span class="text-[#00E5FF] font-mono font-bold py-1">&gt;</span>
+                <input type="text" id="yukon-terminal-input" placeholder="Type command here (e.g. !help, !coins 1000, !night)..." onkeypress="if(event.key === 'Enter') execYukonCommand()"
+                    class="flex-1 bg-transparent border-none outline-none font-mono text-xs text-[#00E5FF]">
+                <button onclick="execYukonCommand()" class="px-4 py-1 bg-[#00E5FF] text-[#001A33] font-bold text-xs rounded border-2 border-[#002244]">EXEC</button>
+            </div>
+        </div>
+
+        <!-- tab content: DB -->
+        <div id="yukon-content-db" class="hidden flex-1 flex-col min-h-0 bg-[#FFFDE7] border-3 border-[#002244] rounded-lg p-3 text-[#002244]">
+            <h3 class="font-cp text-sm border-b-2 border-[#002244] pb-1 mb-2 flex justify-between items-center">
+                <span>Yukon Emulator Database: 'users'</span>
+                <button onclick="updateYukonDBView()" class="px-2 py-0.5 text-[10px] bg-sky-200 border border-[#002244] rounded">🔄 Refresh</button>
+            </h3>
+            <div class="flex-1 overflow-y-auto pr-1">
+                <table class="w-full text-xs text-left border-collapse">
+                    <thead>
+                        <tr class="border-b-2 border-[#002244] font-bold text-gray-700">
+                            <th class="py-1">UUID</th>
+                            <th class="py-1">Penguin Name</th>
+                            <th class="py-1">Wallet Coins</th>
+                            <th class="py-1">Base Hex Color</th>
+                            <th class="py-1">Room Area</th>
+                        </tr>
+                    </thead>
+                    <tbody id="yukon-db-table-body">
+                        <!-- Populated dynamic list -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- tab content: Config -->
+        <div id="yukon-content-config" class="hidden flex-1 flex-col min-h-0 bg-[#FFFDE7] border-3 border-[#002244] rounded-lg p-4 text-[#002244]">
+            <h3 class="font-cp text-sm border-b-2 border-[#002244] pb-1 mb-3">Yukon JSON Config Editor</h3>
+            <div class="space-y-4 overflow-y-auto pr-1 flex-1">
+                <div class="flex items-center justify-between p-2 border-2 border-[#002244] bg-white rounded-xl">
+                    <div>
+                        <div class="font-bold text-xs text-sky-800">Dynamic Server Night Mode</div>
+                        <div class="text-[10px] text-gray-500">Dim directional scene lighting & tint gradient map overlays</div>
+                    </div>
+                    <input type="checkbox" id="yukon-cfg-night" onchange="toggleYukonNightMode(this.checked)" class="w-5 h-5 cursor-pointer">
+                </div>
+                <div class="flex items-center justify-between p-2 border-2 border-[#002244] bg-white rounded-xl">
+                    <div>
+                        <div class="font-bold text-xs text-sky-800">Bot Autonomy Module</div>
+                        <div class="text-[10px] text-gray-500">Allow mock client bots to waddle around randomly & prompt dialogs</div>
+                    </div>
+                    <input type="checkbox" id="yukon-cfg-bots" checked onchange="toggleYukonBots(this.checked)" class="w-5 h-5 cursor-pointer">
+                </div>
+                <div class="flex items-center justify-between p-2 border-2 border-[#002244] bg-white rounded-xl">
+                    <div>
+                        <div class="font-bold text-xs text-sky-800">Waddle Speed Multiplier</div>
+                        <div class="text-[10px] text-gray-500">Increases base movement rate of your primary penguin object</div>
+                    </div>
+                    <select id="yukon-cfg-speed" onchange="changeYukonSpeed(this.value)" class="p-1 border-2 border-[#002244] rounded text-xs bg-white">
+                        <option value="1">Standard (1x)</option>
+                        <option value="1.5">Swift (1.5x)</option>
+                        <option value="2.5">Hyperspeed (2.5x)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 1. PLAYER CARD WINDOW -->
     <div id="player-card" class="cp-popup-window absolute left-[10%] top-[15%] w-[330px] p-4 hidden flex-col">
         <div class="flex justify-between items-center mb-3">
             <span class="text-white font-cp text-lg uppercase drop-shadow-[0_2px_0_#000]">Player Card</span>
@@ -523,6 +629,8 @@
 
         <!-- Right Side: Navigation & Popups launcher -->
         <div class="flex items-center gap-2">
+            <!-- Yukon gears toggle selector button -->
+            <button onclick="togglePopup('yukon-panel')" class="w-12 h-12 rounded-full border-3 border-[#002244] bg-gradient-to-b from-[#00E5FF] to-[#009da1] shadow-[0_3px_0_#002244] flex items-center justify-center hover:scale-105 active:translate-y-0.5 text-2xl" title="Yukon Server Control">🔧</button>
             <button onclick="togglePopup('popup-emotes')" class="w-12 h-12 rounded-full border-3 border-[#002244] bg-gradient-to-b from-[#FFF7C2] to-[#FFD54F] shadow-[0_3px_0_#002244] flex items-center justify-center hover:scale-105 active:translate-y-0.5 text-2xl">💬</button>
             <button onclick="togglePopup('popup-actions')" class="w-12 h-12 rounded-full border-3 border-[#002244] bg-gradient-to-b from-[#FFF7C2] to-[#FFD54F] shadow-[0_3px_0_#002244] flex items-center justify-center hover:scale-105 active:translate-y-0.5 text-2xl">🏃</button>
             <button onclick="togglePopup('puffle-window')" class="w-12 h-12 rounded-full border-3 border-[#002244] bg-gradient-to-b from-pink-100 to-pink-400 shadow-[0_3px_0_#002244] flex items-center justify-center hover:scale-105 active:translate-y-0.5 text-2xl" title="Adopt Puffle">🐾</button>
@@ -537,6 +645,18 @@
         const socket = io();
         const otherPlayers = {}; 
         const speechBubbles = {}; 
+
+        // Yukon server variables state
+        const yukonState = {
+            logs: [
+                "[System] HTML5 Yukon engine connected to sandbox.",
+                "[System] Websockets OK. Server clusters online.",
+                "[Database] Loaded active user tables from memory."
+            ],
+            speedMultiplier: 1.0,
+            botsActive: true,
+            isNight: false
+        };
 
         // Sound System Web Audio Oscillator Synth 
         const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -632,6 +752,7 @@
             
             // Welcome log
             addChatRow("System", `Logged into server ${serverName} as ${state.username}!`);
+            addYukonLog(`[Socket] User '${state.username}' logged in on server: ${serverName}`);
             playCoinsSound();
 
             // Populate room with cute interactive bots
@@ -645,6 +766,221 @@
             const chatLog = document.getElementById('chat-log');
             chatLog.appendChild(r);
             chatLog.scrollTop = chatLog.scrollHeight;
+        }
+
+        // --- STREAMING_CHUNK:Configuring the Yukon terminal triggers and commands... ---
+        function addYukonLog(text) {
+            yukonState.logs.push(text);
+            if(yukonState.logs.length > 50) yukonState.logs.shift();
+            
+            const logsEl = document.getElementById('yukon-terminal-logs');
+            if(logsEl) {
+                logsEl.innerHTML = yukonState.logs.map(log => `<div>${log}</div>`).join('');
+                logsEl.scrollTop = logsEl.scrollHeight;
+            }
+        }
+
+        function switchYukonTab(tabName) {
+            // Hide all tab components
+            document.getElementById('yukon-content-console').classList.add('hidden');
+            document.getElementById('yukon-content-console').classList.remove('flex');
+            document.getElementById('yukon-content-db').classList.add('hidden');
+            document.getElementById('yukon-content-db').classList.remove('flex');
+            document.getElementById('yukon-content-config').classList.add('hidden');
+            document.getElementById('yukon-content-config').classList.remove('flex');
+
+            // Toggle active classes
+            document.getElementById('yukon-tab-console').className = "px-4 py-1.5 text-xs font-bold bg-[#005cbf] text-white border-2 border-[#002244] rounded-t-lg";
+            document.getElementById('yukon-tab-db').className = "px-4 py-1.5 text-xs font-bold bg-[#005cbf] text-white border-2 border-[#002244] rounded-t-lg";
+            document.getElementById('yukon-tab-config').className = "px-4 py-1.5 text-xs font-bold bg-[#005cbf] text-white border-2 border-[#002244] rounded-t-lg";
+
+            if (tabName === 'console') {
+                document.getElementById('yukon-content-console').classList.remove('hidden');
+                document.getElementById('yukon-content-console').classList.add('flex');
+                document.getElementById('yukon-tab-console').className = "px-4 py-1.5 text-xs font-bold bg-[#00E5FF] text-[#001A33] border-2 border-[#002244] rounded-t-lg";
+            } else if (tabName === 'db') {
+                document.getElementById('yukon-content-db').classList.remove('hidden');
+                document.getElementById('yukon-content-db').classList.add('flex');
+                document.getElementById('yukon-tab-db').className = "px-4 py-1.5 text-xs font-bold bg-[#FFFDE7] text-[#002244] border-2 border-[#002244] rounded-t-lg";
+                updateYukonDBView();
+            } else if (tabName === 'config') {
+                document.getElementById('yukon-content-config').classList.remove('hidden');
+                document.getElementById('yukon-content-config').classList.add('flex');
+                document.getElementById('yukon-tab-config').className = "px-4 py-1.5 text-xs font-bold bg-[#FFFDE7] text-[#002244] border-2 border-[#002244] rounded-t-lg";
+            }
+            playPopupSound();
+        }
+
+        function updateYukonDBView() {
+            const tbody = document.getElementById('yukon-db-table-body');
+            if(!tbody) return;
+
+            let rowHtml = `
+                <tr class="border-b border-gray-300">
+                    <td class="py-1">#01</td>
+                    <td class="py-1 font-bold text-sky-700">${state.username} (You)</td>
+                    <td class="py-1">🪙 ${state.coins}</td>
+                    <td class="py-1"><span class="inline-block w-4 h-4 rounded border border-black align-middle" style="background-color: ${state.color}"></span></td>
+                    <td class="py-1 uppercase font-bold text-green-700">${currentRoom}</td>
+                </tr>
+            `;
+
+            botsList.forEach((bot, idx) => {
+                rowHtml += `
+                    <tr class="border-b border-gray-300 text-gray-600">
+                        <td class="py-1">#0${idx+2}</td>
+                        <td class="py-1">${bot.name} (AI)</td>
+                        <td class="py-1">🪙 --</td>
+                        <td class="py-1"><span class="inline-block w-4 h-4 rounded border border-black align-middle" style="background-color: ${bot.mesh.userData.bodyMesh.material.color.getStyle()}"></span></td>
+                        <td class="py-1 uppercase">${currentRoom}</td>
+                    </tr>
+                `;
+            });
+
+            tbody.innerHTML = rowHtml;
+        }
+
+        function showYukonAnnouncement(message) {
+            const banner = document.getElementById('yukon-announcement');
+            const textEl = document.getElementById('announcement-text');
+            if (banner && textEl) {
+                textEl.innerText = message;
+                banner.classList.remove('hidden');
+                playPopupSound();
+                setTimeout(() => {
+                    banner.classList.add('hidden');
+                }, 5000);
+            }
+        }
+
+        function toggleYukonNightMode(checked) {
+            yukonState.isNight = checked;
+            const checkbox = document.getElementById('yukon-cfg-night');
+            if (checkbox) checkbox.checked = checked;
+
+            if(checked) {
+                document.body.style.filter = 'brightness(0.65) contrast(1.15)';
+                if (ambientLight) ambientLight.intensity = 0.25;
+                if (dirLight) dirLight.intensity = 0.15;
+                showYukonAnnouncement("Dynamic night setting deployed to client engine!");
+                addYukonLog(`[Config] Night Mode activated.`);
+            } else {
+                document.body.style.filter = '';
+                if (ambientLight) ambientLight.intensity = 0.85;
+                if (dirLight) dirLight.intensity = 0.45;
+                showYukonAnnouncement("Standard server daylight restored!");
+                addYukonLog(`[Config] Night Mode deactivated.`);
+            }
+        }
+
+        function toggleYukonBots(checked) {
+            yukonState.botsActive = checked;
+            botsList.forEach(bot => {
+                bot.mesh.visible = checked;
+            });
+            addYukonLog(`[Config] Bot Autonomy modules active state = ${checked}`);
+        }
+
+        function changeYukonSpeed(val) {
+            const sp = parseFloat(val);
+            yukonState.speedMultiplier = sp;
+            addYukonLog(`[Config] Waddle speed factor scaled to: ${sp}x`);
+        }
+
+        function execYukonCommand() {
+            const inputEl = document.getElementById('yukon-terminal-input');
+            const fullCmd = inputEl.value.trim();
+            if(!fullCmd) return;
+
+            addYukonLog(`admin@yukon-emu:~$ ${fullCmd}`);
+            inputEl.value = '';
+
+            if(!fullCmd.startsWith('!')) {
+                addYukonLog(`[Error] Command syntax error: all emulation commands must initiate with '!'`);
+                return;
+            }
+
+            const parts = fullCmd.slice(1).split(' ');
+            const cmd = parts[0].toLowerCase();
+            const args = parts.slice(1);
+
+            if (cmd === 'help') {
+                addYukonLog(`[Console] Available Emulations:`);
+                addYukonLog(` -> !coins <amount>      : Set or add wallet coins.`);
+                addYukonLog(` -> !item <cape|hat|etc> : Unlock & equip store clothing.`);
+                addYukonLog(` -> !speed <value>       : Set penguin waddle speed coefficients.`);
+                addYukonLog(` -> !spawn <hexColor>    : Instantaneously connect dynamic bot client.`);
+                addYukonLog(` -> !global <announcement>: Broadcast floating notice banner.`);
+                addYukonLog(` -> !night / !day        : Alter directional environment clock.`);
+            } else if (cmd === 'coins') {
+                const amount = parseInt(args[0]);
+                if (isNaN(amount)) {
+                    addYukonLog(`[Console] Syntax: !coins [integer]`);
+                } else {
+                    addCoins(amount);
+                    addYukonLog(`[Console] DB Executed successfully. Coins adjusted.`);
+                    playCoinsSound();
+                }
+            } else if (cmd === 'item') {
+                const item = args[0]?.toLowerCase();
+                if (!['hat', 'hoodie', 'glasses', 'cape'].includes(item)) {
+                    addYukonLog(`[Console] Syntax: !item <hat|hoodie|glasses|cape>`);
+                } else {
+                    if (!state.inventory.includes(item)) state.inventory.push(item);
+                    equipItem(item);
+                    addYukonLog(`[Console] SQLite sync successful: Added equipped product '${item}'.`);
+                }
+            } else if (cmd === 'speed') {
+                const scale = parseFloat(args[0]);
+                if (isNaN(scale)) {
+                    addYukonLog(`[Console] Syntax: !speed [multiplier]`);
+                } else {
+                    yukonState.speedMultiplier = scale;
+                    addYukonLog(`[Console] Engine waddle rate adjusted to ${scale}x`);
+                    const drop = document.getElementById('yukon-cfg-speed');
+                    if (drop) {
+                        if (scale >= 2.5) drop.value = '2.5';
+                        else if (scale >= 1.5) drop.value = '1.5';
+                        else drop.value = '1';
+                    }
+                }
+            } else if (cmd === 'spawn') {
+                const color = args[0] || '#' + Math.floor(Math.random()*16777215).toString(16);
+                addYukonLog(`[Console] Socket emitting: Spawning mock penguin entity...`);
+                
+                const botMesh = createPenguin(color);
+                botMesh.position.set((Math.random() - 0.5) * 16, 0, (Math.random() - 0.5) * 16);
+                
+                const names = ["YukonBot", "EmulatedPlayer", "HTML5CP", "SocketClient", "PhaserWaddler"];
+                const bName = names[Math.floor(Math.random() * names.length)] + Math.floor(Math.random()*100);
+                
+                botsList.push({
+                    id: 'yukon_bot_' + Date.now(),
+                    name: bName,
+                    mesh: botMesh,
+                    targetPos: botMesh.position.clone(),
+                    action: 'idle',
+                    waddleTimer: 0,
+                    lastChatTime: Date.now() + Math.random() * 8000
+                });
+                
+                addYukonLog(`[Console] Entity waddled into room. User: '${bName}', Color: ${color}.`);
+                updateYukonDBView();
+            } else if (cmd === 'global') {
+                const message = args.join(' ');
+                if (!message) {
+                    addYukonLog(`[Console] Syntax: !global [banner text]`);
+                } else {
+                    showYukonAnnouncement(message);
+                    addYukonLog(`[Console] Socket global announcement emit broad-cast completed.`);
+                }
+            } else if (cmd === 'night') {
+                toggleYukonNightMode(true);
+            } else if (cmd === 'day') {
+                toggleYukonNightMode(false);
+            } else {
+                addYukonLog(`[Console] Unrecognized token command: '!${cmd}'. Use '!help' to parse valid routines.`);
+            }
         }
 
 
@@ -900,6 +1236,7 @@
             playCoinsSound();
             closePuffleWindow();
             addChatRow("Adopt Center", `You adopted a lovely ${puffleType} Puffle!`);
+            addYukonLog(`[Database] User adopted ${puffleType} Puffle.`);
         }
 
         function removePuffle() {
@@ -910,6 +1247,7 @@
             state.puffle = null;
             playPopupSound();
             closePuffleWindow();
+            addYukonLog(`[Database] User dismissed Puffle.`);
         }
 
 
@@ -919,6 +1257,7 @@
 
         function launchSnowball(startPos, endPos) {
             playThrowSound();
+            addYukonLog(`[Snowball] Spawned projectile at [X: ${startPos.x.toFixed(1)}, Z: ${startPos.z.toFixed(1)}]`);
 
             const ballGeo = new THREE.SphereGeometry(0.2, 8, 8);
             const ballMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.9 });
@@ -959,6 +1298,7 @@
             state.coins += amount;
             document.getElementById('player-card-coins').innerText = state.coins;
             document.getElementById('catalog-wallet').innerText = state.coins;
+            updateYukonDBView();
         }
 
 
@@ -1047,6 +1387,7 @@
             playPopupSound();
 
             addChatRow("System", `Entered the ${roomName.toUpperCase()}!`);
+            addYukonLog(`[World] User 'Penguin' switched room map to: ${roomName.toUpperCase()}`);
             spawnRandomRoomBots();
         }
 
@@ -1205,6 +1546,8 @@
             document.getElementById('popup-emotes').classList.add('hidden');
             document.getElementById('popup-actions').classList.add('hidden');
             document.getElementById('popup-map').classList.add('hidden');
+            document.getElementById('yukon-panel').classList.add('hidden');
+            document.getElementById('yukon-panel').classList.remove('flex');
         }
 
         function openPlayerCard() {
@@ -1232,6 +1575,15 @@
             const msgInput = document.getElementById('message-input');
             const txt = msgInput.value.trim();
             if(!txt) return;
+
+            // Direct developer terminal command check integration
+            if (txt.startsWith('!')) {
+                document.getElementById('yukon-terminal-input').value = txt;
+                execYukonCommand();
+                addChatRow("Yukon Console", `Executed command: ${txt}`);
+                msgInput.value = '';
+                return;
+            }
 
             addChatRow(state.username, txt);
             spawnTextSpeechBubble('me', txt);
@@ -1269,6 +1621,8 @@
                     targetPosition.copy(clickPos);
                     isMoving = true;
                     if(currentAction !== 'idle') currentAction = 'idle';
+
+                    addYukonLog(`[World] Waddling to coordinates [X: ${clickPos.x.toFixed(1)}, Z: ${clickPos.z.toFixed(1)}]`);
                 }
             }
         });
@@ -1294,7 +1648,8 @@
                     myPenguin.rotation.y = targetAngle;
 
                     const dir = new THREE.Vector3().subVectors(targetPosition, myPenguin.position).normalize();
-                    myPenguin.position.add(dir.multiplyScalar(speed * delta));
+                    // incorporate yukon speed multiplier configuration!
+                    myPenguin.position.add(dir.multiplyScalar(speed * yukonState.speedMultiplier * delta));
 
                     // Sideways hip waddling loop 
                     myPenguin.rotation.z = Math.sin(timeGlobal * 0.015) * 0.18;
@@ -1329,6 +1684,8 @@
                     const screenY = (projectionVector.y * -.5 + .5) * window.innerHeight;
                     createSplatImpact2D({ x: screenX, y: screenY });
 
+                    addYukonLog(`[Snowball] Impact registered at coordinates [X: ${sb.end.x.toFixed(1)}, Z: ${sb.end.z.toFixed(1)}]`);
+
                     scene.remove(sb.mesh);
                     snowballsList.splice(i, 1);
                 } else {
@@ -1344,6 +1701,15 @@
             // 3. AI Bots Walking & Chatting logic
             botsList.forEach(bot => {
                 const bMesh = bot.mesh;
+                
+                // Skip movement & speaking cycles if Config has turned Bot AI Autonomy modules OFF
+                if (!yukonState.botsActive) {
+                    bMesh.visible = false;
+                    return;
+                } else {
+                    bMesh.visible = true;
+                }
+
                 const bDist = bMesh.position.distanceTo(bot.targetPos);
 
                 if (bDist > 0.25) {
